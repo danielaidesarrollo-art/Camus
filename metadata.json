@@ -1,0 +1,7 @@
+{
+  "name": "Sistema de Manejo de Pacientes",
+  "description": "Un sistema integral para la gestión de ingresos de pacientes, datos clínicos y entregas de turno para un proveedor de atención médica. Incluye autenticación de usuarios, registro de pacientes, selección de terapias por programa y visualización de pacientes.",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

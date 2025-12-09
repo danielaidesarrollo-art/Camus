@@ -1,0 +1,119 @@
+
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Gestión de Pacientes</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'brand-blue': '#0D47A1',
+              'brand-lightblue': '#1976D2',
+              'brand-accent': '#29B6F6',
+              'brand-gray': '#F5F5F5',
+            }
+          }
+        }
+      }
+    </script>
+    
+    <!-- Import Map for React 18 -->
+    <script type="importmap-shim">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom": "https://esm.sh/react-dom@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "@google/genai": "https://esm.sh/@google/genai"
+      }
+    }
+    </script>
+    
+    <!-- Load Sucrase from unpkg for better reliability -->
+    <script src="https://unpkg.com/sucrase@3.35.0/dist/index.js" crossorigin="anonymous"></script>
+
+    <!-- Configure module shim with fetch hook -->
+    <script>
+      window.esmsInitOptions = {
+        shimMode: true,
+        fetch: async (url, options) => {
+          try {
+            const res = await fetch(url, options);
+            if (!res.ok) return res;
+
+            const path = new URL(url, window.location.href).pathname;
+            if (path.endsWith('.tsx') || path.endsWith('.ts')) {
+              const source = await res.text();
+              
+              if (!window.sucrase) {
+                 console.error("Sucrase not loaded for " + path);
+                 return new Response("console.error('Sucrase compiler not loaded. Please refresh the page.');", { 
+                     headers: { 'content-type': 'application/javascript' } 
+                 });
+              }
+              
+              try {
+                const { code } = window.sucrase.transform(source, {
+                  transforms: ["typescript", "jsx"],
+                  jsxRuntime: "classic",
+                  production: false,
+                  filePath: path,
+                });
+                
+                return new Response(code, {
+                  headers: { 'content-type': 'application/javascript' }
+                });
+              } catch (e) {
+                console.error("Error transforming " + path, e);
+                return new Response(`console.error('Transform error: ' + ${JSON.stringify(e.message)});`, {
+                    headers: { 'content-type': 'application/javascript' }
+                });
+              }
+            }
+            return res;
+          } catch (e) {
+            console.error("Fetch hook error", e);
+            throw e;
+          }
+        },
+      };
+    </script>
+
+    <!-- Load es-module-shims -->
+    <script src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
+
+    <!-- Google Maps API -->
+    <script>
+        // Placeholder callback to prevent console errors if the script loads before React
+        window.initMap = function() {
+            console.log('Google Maps API Loaded');
+        }
+    </script>
+    <!-- MarkerClusterer Library -->
+    <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
+
+    <!-- API Key Configurada -->
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB1NzlOyCNBTYwrV3f_TtKRprjrZDopQ8Q&callback=initMap"></script>
+<script type="importmap">
+{
+  "imports": {
+    "react": "https://aistudiocdn.com/react@^19.2.1",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0"
+  }
+}
+</script>
+</head>
+  <body class="bg-brand-gray">
+    <div id="root"></div>
+    
+    <script type="module-shim">
+      import './index.tsx';
+    </script>
+  </body>
+</html>
