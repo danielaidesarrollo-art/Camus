@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { Patient } from '../types.ts';
 import Card from './ui/Card.tsx';
-import { Icons, PROGRAMAS } from '../constants.tsx';
+import { Icons, PROGRAMAS, calculateAge } from '../constants.tsx';
 import Button from './ui/Button.tsx';
 import { calculateDistance } from '../utils/geolocation.ts';
 import { GoogleGenAI } from "@google/genai";
@@ -25,11 +25,14 @@ const MapView: React.FC = () => {
   const circleRef = useRef<any>(null); // Store radius circle
 
   const [mapError, setMapError] = useState<string | null>(null);
-  const [selectedProgram, setSelectedProgram] = useState<string>('Todos');
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   
-  // Radius Filter State
+  // Filters
+  const [selectedProgram, setSelectedProgram] = useState<string>('Todos');
+  const [selectedStatus, setSelectedStatus] = useState<string>('Aceptado'); // Default to active patients
+  const [dateRange, setDateRange] = useState<{start: string, end: string}>({ start: '', end: '' });
   const [radiusFilter, setRadiusFilter] = useState<number>(0); // 0 means no filter
+  
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [mapCenter, setMapCenter] = useState<{lat: number, lng: number} | null>(null);
   const [addressQuery, setAddressQuery] = useState('');
 
@@ -75,13 +78,13 @@ const MapView: React.FC = () => {
     }
   }, []);
 
-  // Filter patients based on Program AND Radius
+  // Filter patients based on Program, Status, Date and Radius
   const geolocatedPatients = useMemo(() => {
     if (!Array.isArray(patients)) return [];
     
     return patients.filter(p => {
-      // 0. Status check: Only show Accepted patients
-      if (p.estado !== 'Aceptado') return false;
+      // 0. Status check
+      if (selectedStatus !== 'Todos' && p.estado !== selectedStatus) return false;
 
       // 1. Coordinate check
       const hasCoords = p.coordinates && 
@@ -93,7 +96,25 @@ const MapView: React.FC = () => {
       const programMatch = selectedProgram === 'Todos' || p.programa === selectedProgram;
       if (!programMatch) return false;
 
-      // 3. Radius check
+      // 3. Date Range Check (Fecha de Ingreso)
+      if (dateRange.start || dateRange.end) {
+          const admissionDate = new Date(p.fechaIngreso);
+          // Normalize to remove time
+          admissionDate.setHours(0,0,0,0);
+
+          if (dateRange.start) {
+              const start = new Date(dateRange.start);
+              start.setHours(0,0,0,0);
+              if (admissionDate < start) return false;
+          }
+          if (dateRange.end) {
+              const end = new Date(dateRange.end);
+              end.setHours(23,59,59,999);
+              if (admissionDate > end) return false;
+          }
+      }
+
+      // 4. Radius check
       if (radiusFilter > 0 && mapCenter && p.coordinates) {
         const distance = calculateDistance(
             mapCenter.lat, 
@@ -106,7 +127,7 @@ const MapView: React.FC = () => {
 
       return true;
     });
-  }, [patients, selectedProgram, radiusFilter, mapCenter]);
+  }, [patients, selectedProgram, selectedStatus, dateRange, radiusFilter, mapCenter]);
 
   // Handle Markers, Clustering and Circle rendering when data or map changes
   useEffect(() => {
@@ -128,22 +149,46 @@ const MapView: React.FC = () => {
     const newMarkers = geolocatedPatients.map(patient => {
         if (!patient.coordinates) return null;
 
+        // Determine marker color based on status
+        let iconUrl = null; // Default red
+        if (patient.estado === 'Aceptado') iconUrl = 'https://maps.google.com/mapfiles/ms/icons/green-dot.png';
+        else if (patient.estado === 'Rechazado') iconUrl = 'https://maps.google.com/mapfiles/ms/icons/red-dot.png';
+        else iconUrl = 'https://maps.google.com/mapfiles/ms/icons/yellow-dot.png';
+
         const marker = new window.google.maps.Marker({
           position: patient.coordinates,
           // IMPORTANT: Do not set 'map: map' here when using clustering, 
           // or markers will appear twice (once in cluster, once on map).
           // If Clustering library fails to load, we handle fallback below.
           title: patient.nombreCompleto,
-          icon: null // Use default marker
+          icon: iconUrl
         });
 
         marker.addListener('click', () => {
+          const age = calculateAge(patient.fechaNacimiento);
+          const admissionDate = new Date(patient.fechaIngreso).toLocaleDateString('es-CO');
+          
           const content = `
-            <div style="padding: 8px; max-width: 200px;">
-              <h3 style="margin: 0 0 5px 0; font-weight: bold; color: #0D47A1;">${patient.nombreCompleto}</h3>
-              <p style="margin: 0; font-size: 12px; color: #555;">ID: ${patient.id}</p>
-              <p style="margin: 5px 0 0 0; font-size: 13px;">${patient.direccion}</p>
-              <span style="display: inline-block; margin-top: 5px; padding: 2px 6px; border-radius: 4px; font-size: 10px; background-color: #E3F2FD; color: #0D47A1;">${patient.programa}</span>
+            <div style="padding: 10px; max-width: 260px; font-family: sans-serif;">
+              <div style="border-bottom: 2px solid ${patient.estado === 'Aceptado' ? '#4CAF50' : '#FFC107'}; padding-bottom: 5px; margin-bottom: 8px;">
+                  <h3 style="margin: 0; font-size: 16px; font-weight: bold; color: #0D47A1;">${patient.nombreCompleto}</h3>
+                  <span style="font-size: 11px; color: #666;">${patient.tipoDocumento}: ${patient.id}</span>
+              </div>
+              
+              <div style="font-size: 13px; color: #333; line-height: 1.5;">
+                 <p style="margin: 2px 0;"><strong>Edad:</strong> ${age} años</p>
+                 <p style="margin: 2px 0;"><strong>Programa:</strong> ${patient.programa}</p>
+                 <p style="margin: 2px 0;"><strong>Dx:</strong> ${patient.diagnosticoEgreso}</p>
+                 <p style="margin: 2px 0;"><strong>Ingreso:</strong> ${admissionDate}</p>
+                 <p style="margin: 2px 0;"><strong>Dirección:</strong> ${patient.direccion}</p>
+                 <p style="margin: 2px 0;"><strong>Tel:</strong> <a href="tel:${patient.telefonoMovil}" style="color:#0D47A1;">${patient.telefonoMovil}</a></p>
+              </div>
+
+              <div style="margin-top: 8px; text-align: right;">
+                 <span style="display: inline-block; padding: 3px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; background-color: ${patient.estado === 'Aceptado' ? '#E8F5E9' : '#FFF8E1'}; color: ${patient.estado === 'Aceptado' ? '#2E7D32' : '#F57F17'};">
+                    ${patient.estado.toUpperCase()}
+                 </span>
+              </div>
             </div>
           `;
           infoWindow.setContent(content);
@@ -283,16 +328,17 @@ const MapView: React.FC = () => {
 
   return (
     <div className="h-full flex flex-col">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 gap-4">
-        <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
-            {Icons.Map} Mapa de Pacientes
-        </h1>
-        <div className="flex flex-wrap gap-2 w-full md:w-auto items-center">
-             <div className="flex gap-1 w-full md:w-auto">
+      <div className="flex flex-col space-y-4 mb-4">
+        {/* Header Title and Search */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-2">
+                {Icons.Map} Mapa de Pacientes
+            </h1>
+            <div className="flex gap-1 w-full md:w-auto">
                  <input 
                     type="text" 
                     placeholder="Buscar ubicación..." 
-                    className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue w-full md:w-48"
+                    className="px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue w-full md:w-64"
                     value={addressQuery}
                     onChange={(e) => setAddressQuery(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && handleAddressSearch()}
@@ -300,29 +346,76 @@ const MapView: React.FC = () => {
                  <button 
                     onClick={handleAddressSearch}
                     className="px-3 py-2 bg-gray-200 hover:bg-gray-300 rounded-md font-medium text-gray-700"
+                    title="Centrar mapa en dirección"
                  >
                     🔍
                  </button>
              </div>
-             <select 
-                value={radiusFilter} 
-                onChange={(e) => setRadiusFilter(Number(e.target.value))}
-                className="w-1/2 md:w-40 px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue"
-             >
-                <option value={0}>Todo el mapa</option>
-                <option value={1}>1 km del centro</option>
-                <option value={3}>3 km del centro</option>
-                <option value={5}>5 km del centro</option>
-                <option value={10}>10 km del centro</option>
-             </select>
-             <select 
-                value={selectedProgram} 
-                onChange={(e) => setSelectedProgram(e.target.value)}
-                className="w-1/2 md:w-56 px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue"
-             >
-                <option value="Todos">Todos los Programas</option>
-                {PROGRAMAS.map(p => <option key={p} value={p}>{p}</option>)}
-             </select>
+        </div>
+
+        {/* Filters Bar */}
+        <div className="bg-white p-3 rounded-lg shadow-sm border border-gray-200 flex flex-wrap gap-3 items-end">
+             <div className="flex-1 min-w-[200px]">
+                 <label className="block text-xs font-semibold text-gray-600 mb-1">Programa</label>
+                 <select 
+                    value={selectedProgram} 
+                    onChange={(e) => setSelectedProgram(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 bg-white rounded-md text-sm focus:outline-none focus:ring-brand-lightblue"
+                 >
+                    <option value="Todos">Todos los Programas</option>
+                    {PROGRAMAS.map(p => <option key={p} value={p}>{p}</option>)}
+                 </select>
+             </div>
+
+             <div className="flex-1 min-w-[150px]">
+                 <label className="block text-xs font-semibold text-gray-600 mb-1">Estado</label>
+                 <select 
+                    value={selectedStatus} 
+                    onChange={(e) => setSelectedStatus(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 bg-white rounded-md text-sm focus:outline-none focus:ring-brand-lightblue"
+                 >
+                    <option value="Todos">Todos</option>
+                    <option value="Aceptado">Aceptados</option>
+                    <option value="Pendiente">Pendientes</option>
+                    <option value="Rechazado">Rechazados</option>
+                 </select>
+             </div>
+
+             <div className="flex-1 min-w-[150px]">
+                 <label className="block text-xs font-semibold text-gray-600 mb-1">Radio (desde el centro)</label>
+                 <select 
+                    value={radiusFilter} 
+                    onChange={(e) => setRadiusFilter(Number(e.target.value))}
+                    className="w-full px-3 py-2 border border-gray-300 bg-white rounded-md text-sm focus:outline-none focus:ring-brand-lightblue"
+                 >
+                    <option value={0}>Sin Filtro</option>
+                    <option value={1}>1 km</option>
+                    <option value={3}>3 km</option>
+                    <option value={5}>5 km</option>
+                    <option value={10}>10 km</option>
+                 </select>
+             </div>
+             
+             <div className="flex gap-2 min-w-[300px]">
+                <div className="flex-1">
+                     <label className="block text-xs font-semibold text-gray-600 mb-1">Ingreso Desde</label>
+                     <input 
+                        type="date" 
+                        value={dateRange.start} 
+                        onChange={(e) => setDateRange(prev => ({...prev, start: e.target.value}))}
+                        className="w-full px-3 py-2 border border-gray-300 bg-white rounded-md text-sm focus:outline-none focus:ring-brand-lightblue"
+                     />
+                </div>
+                <div className="flex-1">
+                     <label className="block text-xs font-semibold text-gray-600 mb-1">Hasta</label>
+                     <input 
+                        type="date" 
+                        value={dateRange.end} 
+                        onChange={(e) => setDateRange(prev => ({...prev, end: e.target.value}))}
+                        className="w-full px-3 py-2 border border-gray-300 bg-white rounded-md text-sm focus:outline-none focus:ring-brand-lightblue"
+                     />
+                </div>
+             </div>
         </div>
       </div>
 
@@ -343,7 +436,7 @@ const MapView: React.FC = () => {
                 {geolocatedPatients.length === 0 && (
                      <div className="absolute inset-0 flex items-center justify-center bg-gray-50 bg-opacity-80 z-10 pointer-events-none">
                         <p className="text-gray-500 font-medium bg-white px-4 py-2 rounded shadow">
-                            No hay pacientes en esta zona o filtro.
+                            No hay pacientes que coincidan con los filtros seleccionados.
                         </p>
                      </div>
                 )}
@@ -357,10 +450,17 @@ const MapView: React.FC = () => {
             <div className="w-full md:w-80 flex-shrink-0 space-y-4 overflow-y-auto max-h-[600px]">
                 <Card title="Resumen" className="sticky top-0 z-10 bg-white">
                     <div className="text-sm space-y-2">
-                        <p><strong>Total Pacientes:</strong> {patients.length}</p>
+                        <p><strong>Total Registrados:</strong> {patients.length}</p>
                         <p><strong>Visibles en Mapa:</strong> {geolocatedPatients.length}</p>
-                        <p><strong>Programa:</strong> {selectedProgram}</p>
-                        <p><strong>Radio:</strong> {radiusFilter > 0 ? `${radiusFilter} km` : 'Sin límite'}</p>
+                        <div className="pt-2 border-t mt-2">
+                             <p className="text-xs text-gray-500">Filtros Activos:</p>
+                             <ul className="list-disc list-inside text-xs text-gray-700">
+                                {selectedStatus !== 'Todos' && <li>Estado: {selectedStatus}</li>}
+                                {selectedProgram !== 'Todos' && <li>Prog: {selectedProgram}</li>}
+                                {radiusFilter > 0 && <li>Radio: {radiusFilter}km</li>}
+                                {(dateRange.start || dateRange.end) && <li>Rango Fechas Activo</li>}
+                             </ul>
+                        </div>
                     </div>
                 </Card>
                 
@@ -436,6 +536,10 @@ const MapView: React.FC = () => {
                             }`}>
                                 {selectedPatient.estado}
                             </span>
+                            <div className="mt-3 pt-3 border-t border-gray-100 text-sm">
+                                 <p><strong>Edad:</strong> {calculateAge(selectedPatient.fechaNacimiento)} años</p>
+                                 <p className="mt-1"><strong>Diagnóstico:</strong> {selectedPatient.diagnosticoEgreso}</p>
+                            </div>
                         </div>
                     </Card>
                 )}

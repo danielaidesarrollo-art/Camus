@@ -1,7 +1,8 @@
 
+
 import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context/AppContext.tsx';
-import { calculateAge, AUDIFARMA_EMAILS } from '../constants.tsx';
+import { calculateAge, AUDIFARMA_EMAILS, MEDICAMENTOS_ALTO_RIESGO } from '../constants.tsx';
 import Card from './ui/Card.tsx';
 import Button from './ui/Button.tsx';
 import Input from './ui/Input.tsx';
@@ -130,6 +131,18 @@ const ProductionOrderView: React.FC = () => {
                 </div>
             </div>
 
+            {/* Legend for Alerts */}
+            <div className="flex gap-4 text-xs">
+                <div className="flex items-center gap-1">
+                    <span className="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">NUEVO</span>
+                    <span className="text-gray-600">Ingreso reciente (≤ 48h)</span>
+                </div>
+                <div className="flex items-center gap-1">
+                    <span className="bg-red-100 text-red-800 px-2 py-0.5 rounded font-bold">⚠️ ALTO RIESGO</span>
+                    <span className="text-gray-600">Medicamento de Control Especial</span>
+                </div>
+            </div>
+
             <Card className="overflow-hidden">
                 <div className="overflow-x-auto">
                     <table className="min-w-full text-xs text-left text-gray-700">
@@ -168,6 +181,17 @@ const ProductionOrderView: React.FC = () => {
                                     const admin = adminData[p.id] || { nap: '', auth: '', reutilization: '', napAuth: '' };
                                     const isSelected = selectedRows.has(p.id);
 
+                                    // Logic for Alerts
+                                    const medicationName = p.antibiotico?.medicamento || '';
+                                    const isHighRisk = MEDICAMENTOS_ALTO_RIESGO.some(riskMed => 
+                                        medicationName.toUpperCase().includes(riskMed)
+                                    );
+
+                                    const admissionDate = new Date(p.fechaIngreso);
+                                    const timeDiff = Math.abs(new Date().getTime() - admissionDate.getTime());
+                                    const dayDiff = Math.ceil(timeDiff / (1000 * 3600 * 24)); 
+                                    const isNewPatient = dayDiff <= 2; // Considered new if admitted within last 2 days
+
                                     return (
                                         <tr key={p.id} className={`hover:bg-gray-50 transition ${isSelected ? 'bg-green-50' : ''}`}>
                                             <td className="px-2 py-2 text-center">
@@ -182,9 +206,25 @@ const ProductionOrderView: React.FC = () => {
                                             <td className="px-2 py-2">{monthStr}</td>
                                             <td className="px-2 py-2 max-w-[150px] truncate" title={p.direccion}>{p.direccion}</td>
                                             <td className="px-2 py-2">{p.id}</td>
-                                            <td className="px-2 py-2 font-medium">{p.nombreCompleto}</td>
+                                            <td className="px-2 py-2 font-medium">
+                                                <div className="flex flex-col">
+                                                    <span>{p.nombreCompleto}</span>
+                                                    {isNewPatient && (
+                                                        <span className="inline-block bg-blue-100 text-blue-800 text-[10px] px-1.5 py-0.5 rounded font-bold w-fit mt-1">
+                                                            NUEVO
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </td>
                                             <td className="px-2 py-2">{age}</td>
-                                            <td className="px-2 py-2 bg-blue-50 font-semibold">{p.antibiotico?.medicamento}</td>
+                                            <td className={`px-2 py-2 font-semibold ${isHighRisk ? 'bg-red-50 text-red-700' : 'bg-blue-50'}`}>
+                                                {medicationName}
+                                                {isHighRisk && (
+                                                    <div className="flex items-center gap-1 mt-1 text-[10px] bg-red-100 px-1 rounded w-fit">
+                                                        <span>⚠️ ALTO RIESGO</span>
+                                                    </div>
+                                                )}
+                                            </td>
                                             <td className="px-2 py-2 bg-blue-50">{p.antibiotico?.miligramos} mg</td>
                                             <td className="px-2 py-2 bg-blue-50">{p.antibiotico?.frecuenciaHoras} Hrs</td>
                                             <td className="px-2 py-2 text-center">{p.antibiotico?.diasTotales}</td>

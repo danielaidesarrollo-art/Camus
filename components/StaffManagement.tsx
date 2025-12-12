@@ -55,6 +55,12 @@ const StaffManagement: React.FC = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         
+        // Validación: Hora Fin debe ser posterior a Hora Inicio
+        if (turnoInicio && turnoFin && turnoInicio >= turnoFin) {
+            alert('La hora de fin de turno debe ser posterior a la hora de inicio.');
+            return;
+        }
+
         const userData: User = {
             documento,
             nombre,

@@ -72,7 +72,14 @@ export const ANTIBIOTICOS = [
   "Ciprofloxacina", "Claritromicina", "Clindamicina", "Clínica de anticoagulación",
   "Dextrosa en agua destilada 5%", "Dextrosa en agua destilada al 10%", "Daptomicina",
   "Ertapenem", "Gentamicina", "Hidromorfona", "Linezolid", "Meropenem", "Metronidazol",
-  "Oxacilina", "Penicilina Cristalina", "Vancomicina"
+  "Morfina", "Oxacilina", "Penicilina Cristalina", "Vancomicina"
+];
+
+export const MEDICAMENTOS_ALTO_RIESGO = [
+    "VANCOMICINA", 
+    "CLINDAMICINA", 
+    "HIDROMORFONA", 
+    "MORFINA"
 ];
 
 export const OXIGENO_DISPOSITIVOS = ["Cánula nasal", "Ventury", "Máscara con reservorio", "Cpap", "Bipap"];

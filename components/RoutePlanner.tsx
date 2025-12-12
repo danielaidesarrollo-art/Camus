@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { User, Patient } from '../types.ts';
@@ -7,7 +6,7 @@ import Card from './ui/Card.tsx';
 import Button from './ui/Button.tsx';
 import Input from './ui/Input.tsx';
 import Select from './ui/Select.tsx';
-import { EXCLUDED_FROM_ROUTES, calculateAge } from '../constants.tsx';
+import { EXCLUDED_FROM_ROUTES, calculateAge, SERVICE_ROLE_MAPPING } from '../constants.tsx';
 import { calculateDistance, COVERAGE_POLYGON } from '../utils/geolocation.ts';
 
 declare global {
@@ -59,6 +58,12 @@ const RoutePlanner: React.FC = () => {
             if (targetRole.includes('MEDICO')) roleMatch = role.includes('MEDICO');
             else if (targetRole.includes('AUXILIAR')) roleMatch = role.includes('AUXILIAR');
             else if (targetRole.includes('JEFE')) roleMatch = role.includes('JEFE') && role.includes('ADMINISTRATIVO');
+            else if (targetRole.includes('FISIOTERAPEUTA')) roleMatch = role.includes('FISIOTERAPEUTA');
+            else if (targetRole.includes('FONOAUDIOLOGO')) roleMatch = role.includes('FONOAUDIOLOGO');
+            else if (targetRole.includes('TERAPEUTA')) roleMatch = role.includes('TERAPEUTA');
+            else if (targetRole.includes('NUTRICIONISTA')) roleMatch = role.includes('NUTRICIONISTA');
+            else if (targetRole.includes('PSICOLOGO')) roleMatch = role.includes('PSICOLOGO');
+            else if (targetRole.includes('TRABAJADOR')) roleMatch = role.includes('TRABAJADOR');
 
             // Check Exclusion
             const isExcluded = EXCLUDED_FROM_ROUTES.some(excludedName => 
@@ -73,6 +78,29 @@ const RoutePlanner: React.FC = () => {
     const selectedStaffMember = useMemo(() => {
         return users.find(u => u.documento === selectedStaffId);
     }, [users, selectedStaffId]);
+
+    // Calculate Shift Duration in Hours
+    const shiftMetrics = useMemo(() => {
+        if (!selectedStaffMember || !selectedStaffMember.turnoInicio || !selectedStaffMember.turnoFin) {
+            return { duration: 0, capacityTime: 0 };
+        }
+        try {
+            const [startH, startM] = selectedStaffMember.turnoInicio.split(':').map(Number);
+            const [endH, endM] = selectedStaffMember.turnoFin.split(':').map(Number);
+            
+            let start = startH + startM / 60;
+            let end = endH + endM / 60;
+            
+            if (end < start) end += 24; // Handle night shifts crossing midnight
+            
+            const duration = end - start;
+            // Est. 45 mins per patient + 15 mins travel = 1 hour per patient roughly
+            const capacityTime = Math.floor(duration * 60); // in minutes
+            return { duration, capacityTime };
+        } catch (e) {
+            return { duration: 0, capacityTime: 0 };
+        }
+    }, [selectedStaffMember]);
 
     // Helper: Calculate specific antibiotic dose times for a given date
     const getAntibioticSchedule = (patient: Patient, dateStr: string): string[] => {
@@ -108,22 +136,43 @@ const RoutePlanner: React.FC = () => {
         return `${last.authorRole} (${new Date(last.timestamp).toLocaleDateString()}): ${last.note.substring(0, 100)}${last.note.length > 100 ? '...' : ''}`;
     };
 
-    // 2. Identify Patients requiring visits on the selected date (Automatic Calculation)
+    // 2. Identify Patients requiring visits on the selected date AND matching the staff role
     const calculatedRoute = useMemo(() => {
         if (!Array.isArray(patients)) return [];
+        if (!selectedStaffMember) return [];
+
+        // Determine available services for this staff member based on mapping
+        const staffServices = Object.entries(SERVICE_ROLE_MAPPING)
+            .filter(([_, roles]) => roles.includes(selectedStaffMember.cargo))
+            .map(([service]) => service.toUpperCase());
+
+        const isAuxiliar = selectedStaffMember.cargo.includes('AUXILIAR');
 
         const filtered = patients.filter(p => {
              if (p.estado !== 'Aceptado' || !p.fechaIngreso || !p.coordinates) return false;
              
-             // --- Special Logic for AUXILIAR: Check Antibiotics ---
-             if (selectedRole.includes('AUXILIAR')) {
-                 if (p.terapias['Aplicación de terapia antibiótica']) {
-                    const doses = getAntibioticSchedule(p, selectedDate);
-                    if (doses.length > 0) return true;
-                 }
+             // --- 1. THERAPY MATCHING LOGIC ---
+             // Check if patient needs a therapy that matches the staff's role
+             const patientNeeds = Object.entries(p.terapias)
+                .filter(([_, required]) => required)
+                .map(([terapia]) => terapia.toUpperCase());
+            
+             const hasMatchingTherapy = patientNeeds.some(need => staffServices.includes(need));
+             
+             // Special case: Antibiotics for Auxiliaries (might not be in simple mapping depending on key)
+             const hasAntibioticNeed = isAuxiliar && p.terapias['Aplicación de terapia antibiótica'];
+
+             // If the staff member cannot perform any of the patient's required therapies, skip
+             if (!hasMatchingTherapy && !hasAntibioticNeed) return false;
+
+
+             // --- 2. SCHEDULE/INTERVAL LOGIC ---
+             if (isAuxiliar && hasAntibioticNeed) {
+                const doses = getAntibioticSchedule(p, selectedDate);
+                if (doses.length > 0) return true; // Always show if antibiotic is due today
              }
 
-             // --- Standard Logic for Regular Visits ---
+             // Standard Logic for Regular Visits
              let intervalDays = 0;
              if (p.programa === 'Virrey solis en Casa Hospitalario') intervalDays = 3;
              else if (p.programa === 'Virrey solis en Casa Crónico') intervalDays = 90;
@@ -146,18 +195,18 @@ const RoutePlanner: React.FC = () => {
         // Default Sort
         return filtered.sort((a, b) => {
             // PRIORITY RULE: Antibiotic Schedules for Auxiliaries
-            if (selectedRole.includes('AUXILIAR')) {
+            if (isAuxiliar) {
                 const aDoses = getAntibioticSchedule(a, selectedDate).length > 0;
                 const bDoses = getAntibioticSchedule(b, selectedDate).length > 0;
                 
                 if (aDoses && !bDoses) return -1;
                 if (!aDoses && bDoses) return 1;
             }
-            // Secondary Sort: Latitude (North to South)
+            // Secondary Sort: Latitude (North to South) for efficiency
             return (b.coordinates?.lat || 0) - (a.coordinates?.lat || 0);
         });
 
-    }, [patients, selectedDate, selectedRole]);
+    }, [patients, selectedDate, selectedStaffMember]);
 
     // Sync manual route with calculated route when filters change (reset editing)
     useEffect(() => {
@@ -348,11 +397,16 @@ const RoutePlanner: React.FC = () => {
     const maxCapacity = selectedStaffMember?.maxPacientes || 6;
     const currentLoad = manualRoute.length;
     const isOverCapacity = currentLoad > maxCapacity;
+    
+    // Time Load Logic
+    const estimatedMinutes = currentLoad * 60; // Approx 60 mins per patient visit incl travel
+    const availableMinutes = shiftMetrics.capacityTime;
+    const timeLoadPercent = availableMinutes > 0 ? Math.min(100, (estimatedMinutes / availableMinutes) * 100) : 0;
 
     return (
         <div className="flex flex-col h-full space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                 <h1 className="text-2xl font-bold text-gray-800">Planificador de Rutas</h1>
+                 <h1 className="text-2xl font-bold text-gray-800">Planificador de Rutas Inteligente</h1>
                  <div className="flex flex-wrap gap-2 w-full md:w-auto">
                     <Input type="date" value={selectedDate} onChange={e => setSelectedDate(e.target.value)} />
                     <select 
@@ -363,6 +417,12 @@ const RoutePlanner: React.FC = () => {
                         <option value="MEDICO DOMICILIARIO">Médicos</option>
                         <option value="AUXILIAR DE ENFERMERIA">Auxiliares</option>
                         <option value="JEFE DE ENFERMERIA">Jefes</option>
+                        <option value="FISIOTERAPEUTA">Fisioterapia</option>
+                        <option value="FONOAUDIOLOGO">Fonoaudiología</option>
+                        <option value="TERAPEUTA OCUPACIONAL">T. Ocupacional</option>
+                        <option value="TRABAJADOR SOCIAL">Trabajo Social</option>
+                        <option value="PSICOLOGO">Psicología</option>
+                        <option value="NUTRICIONISTA">Nutrición</option>
                     </select>
                     <select
                         value={selectedStaffId}
@@ -381,29 +441,49 @@ const RoutePlanner: React.FC = () => {
             </div>
 
             {selectedStaffMember && (
-                <div className={`p-3 rounded-md flex justify-between items-center text-sm ${isOverCapacity ? 'bg-red-100 text-red-800 border border-red-200' : 'bg-blue-50 text-blue-800 border border-blue-200'}`}>
-                    <div className="flex gap-4">
-                        <span className="font-semibold">Colaborador: {selectedStaffMember.nombre}</span>
-                        {selectedStaffMember.turnoInicio && (
-                            <span>🕒 Turno: {selectedStaffMember.turnoInicio} - {selectedStaffMember.turnoFin}</span>
-                        )}
+                <div className={`p-3 rounded-md border text-sm space-y-2 ${isOverCapacity || estimatedMinutes > availableMinutes ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200'}`}>
+                    <div className="flex justify-between items-center">
+                        <div className="flex gap-4">
+                            <span className="font-semibold text-gray-800">Colaborador: {selectedStaffMember.nombre}</span>
+                            {selectedStaffMember.turnoInicio && (
+                                <span className="text-gray-600">🕒 Turno: {selectedStaffMember.turnoInicio} - {selectedStaffMember.turnoFin}</span>
+                            )}
+                        </div>
+                        <div className="font-bold text-gray-800">
+                            Pacientes: {currentLoad} / {maxCapacity}
+                            {isOverCapacity && <span className="ml-2 text-red-600">⚠️ Cupo Excedido</span>}
+                        </div>
                     </div>
-                    <div className="font-bold">
-                        Capacidad: {currentLoad} / {maxCapacity} Pacientes
-                        {isOverCapacity && <span className="ml-2">⚠️ Excede límite</span>}
-                    </div>
+                    
+                    {/* Schedule Visualization Bar */}
+                    {availableMinutes > 0 && (
+                        <div className="flex items-center gap-2">
+                             <span className="text-xs font-medium w-20">Carga Horaria:</span>
+                             <div className="flex-grow bg-gray-200 rounded-full h-2.5 overflow-hidden">
+                                <div 
+                                    className={`h-2.5 rounded-full ${timeLoadPercent >= 100 ? 'bg-red-600' : 'bg-green-500'}`} 
+                                    style={{ width: `${timeLoadPercent}%` }}
+                                ></div>
+                             </div>
+                             <span className="text-xs text-gray-600">{estimatedMinutes}min / {availableMinutes}min</span>
+                        </div>
+                    )}
                 </div>
             )}
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 h-[600px]">
                 <div className="md:col-span-1 overflow-y-auto bg-white rounded-lg shadow p-4 border border-gray-200">
                     <div className="flex justify-between items-center mb-3 border-b pb-2">
-                        <h3 className="font-bold text-lg">Ruta ({manualRoute.length})</h3>
+                        <h3 className="font-bold text-lg">Ruta Sugerida ({manualRoute.length})</h3>
                         {canEditRoute && <span className="text-xs text-blue-600 bg-blue-50 px-2 py-1 rounded">Modo Edición Activo</span>}
                     </div>
+                    
+                    {!selectedStaffMember && (
+                         <p className="text-xs text-yellow-700 bg-yellow-50 p-2 rounded mb-2">Seleccione un colaborador para ver los pacientes que coinciden con su perfil y horario.</p>
+                    )}
 
                     {/* --- Manual Add Patient (JEFES Only) --- */}
-                    {canEditRoute && (
+                    {canEditRoute && selectedStaffMember && (
                         <div className="mb-4 relative">
                             <Input 
                                 placeholder="🔍 Buscar paciente para agregar..." 
@@ -493,7 +573,7 @@ const RoutePlanner: React.FC = () => {
                             )})}
                         </ul>
                     ) : (
-                        <p className="text-gray-500 text-sm text-center mt-10">No hay visitas programadas.</p>
+                        <p className="text-gray-500 text-sm text-center mt-10">No hay pacientes asignados para esta fecha/colaborador.</p>
                     )}
                 </div>
                 <div className="md:col-span-2 bg-gray-100 rounded-lg shadow border border-gray-200 relative overflow-hidden">

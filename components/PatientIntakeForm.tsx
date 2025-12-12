@@ -33,10 +33,12 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
     const [telefonoCuidador, setTelefonoCuidador] = useState(patientToEdit?.telefonoCuidador || '');
     
     // Geolocation state
-    // Only set success if we actually have coordinates for the patient being edited
-    const [coverageStatus, setCoverageStatus] = useState<'idle' | 'loading' | 'success' | 'outside' | 'error'>(
-        (isEditMode && patientToEdit?.coordinates) ? 'success' : 'idle'
-    );
+    const [coverageStatus, setCoverageStatus] = useState<'idle' | 'loading' | 'success' | 'outside' | 'error' | 'manual'>(() => {
+        if (isEditMode && patientToEdit?.coordinates) {
+            return isPointInPolygon(patientToEdit.coordinates, COVERAGE_POLYGON) ? 'success' : 'outside';
+        }
+        return 'idle';
+    });
     const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | undefined>(patientToEdit?.coordinates);
 
     // Clinical data
@@ -83,12 +85,9 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
     }, [programa, isEditMode]);
 
     useEffect(() => {
-        // If in edit mode and the address hasn't changed from what's in the DB, 
-        // don't reset coordinates. This prevents forcing re-verification on every edit.
         if (isEditMode && patientToEdit?.direccion === direccion) {
             return;
         }
-
         setCoverageStatus('idle');
         setCoordinates(undefined);
     }, [direccion, isEditMode, patientToEdit]);
@@ -114,21 +113,32 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
         }
         setCoverageStatus('loading');
         
-        // Auto-append city if not present to improve geocoding accuracy
         let addressToVerify = direccion;
+        // Basic check to see if city/country is already present to avoid duplication
         if (!addressToVerify.toLowerCase().includes('bogota') && !addressToVerify.toLowerCase().includes('soacha')) {
             addressToVerify += ", Bogotá, Colombia";
         }
 
-        const coords = await geocodeAddress(addressToVerify);
-        
-        if (coords) {
-            const isInside = isPointInPolygon(coords, COVERAGE_POLYGON);
-            setCoverageStatus(isInside ? 'success' : 'outside');
-            setCoordinates(coords);
-        } else {
+        try {
+            const coords = await geocodeAddress(addressToVerify);
+            
+            if (coords) {
+                const isInside = isPointInPolygon(coords, COVERAGE_POLYGON);
+                setCoverageStatus(isInside ? 'success' : 'outside');
+                setCoordinates(coords);
+            } else {
+                setCoverageStatus('error');
+                setCoordinates(undefined);
+            }
+        } catch (error) {
+            console.error("Verification failed", error);
             setCoverageStatus('error');
-            setCoordinates(undefined);
+        }
+    };
+    
+    const handleForceManual = () => {
+        if (confirm("¿Está seguro de forzar el ingreso? Si la dirección no es válida, la geolocalización no funcionará en el mapa.")) {
+             setCoverageStatus('manual');
         }
     };
 
@@ -178,7 +188,7 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
             nombreCompleto,
             fechaNacimiento,
             direccion,
-            coordinates, // Save the coordinates found during verification
+            coordinates, // Saving coordinates to patient object
             telefonoFijo,
             telefonoMovil,
             cuidadorPrincipal,
@@ -220,14 +230,27 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
                         </p>
                     </div>
                 );
+            case 'manual':
+                 return (
+                    <div className="mt-1 text-sm text-yellow-700">
+                        <div className="flex items-center gap-2 font-medium">
+                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
+                            <span>Ingreso manual habilitado.</span>
+                        </div>
+                         <p className="text-xs pl-7 mt-1">Se guardará sin coordenadas precisas.</p>
+                    </div>
+                 );
             case 'error':
                  return (
                     <div className="mt-1 text-sm text-yellow-700">
                         <div className="flex items-center gap-2 font-medium">
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.21 3.03-1.742 3.03H4.42c-1.532 0-2.492-1.696-1.742-3.03l5.58-9.92zM10 13a1 1 0 110-2 1 1 0 010 2zm-1-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
-                            <span>No se pudo verificar con precisión.</span>
+                            <span>No se pudo verificar la dirección.</span>
                         </div>
-                        <p className="text-xs pl-7 mt-1">Asegúrese de tener habilitada la "Geocoding API" en Google Cloud. Se intentará usar una ubicación aproximada.</p>
+                        <div className="pl-7 mt-1">
+                             <p className="text-xs mb-1">Puede intentar corregir la dirección o usar el ingreso manual.</p>
+                             <button onClick={handleForceManual} type="button" className="text-blue-600 underline text-xs font-semibold hover:text-blue-800">Forzar Ingreso Manual</button>
+                        </div>
                     </div>
                  );
             default:
@@ -236,9 +259,8 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
     };
 
     const renderStepOne = () => {
-        // Ensure coverage is valid and a program is selected before proceeding
-        // If in edit mode with existing coordinates, consider it success if status isn't explicitly error/loading
-        const isNextDisabled = !['success', 'outside'].includes(coverageStatus) || !programa;
+        // Allows continuing if success, outside, OR manual override is active
+        const isNextDisabled = !['success', 'outside', 'manual'].includes(coverageStatus) || !programa;
         
         return (
             <div className="space-y-4">
@@ -281,7 +303,7 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
                     <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
                     <div>
                         <Button onClick={() => setStep(2)} disabled={isNextDisabled}>Siguiente</Button>
-                        {isNextDisabled && <p className="text-xs text-gray-500 mt-2 text-right">Debe seleccionar un programa y verificar una dirección válida.</p>}
+                        {isNextDisabled && <p className="text-xs text-gray-500 mt-2 text-right">Debe verificar la dirección.</p>}
                     </div>
                 </div>
             </div>
@@ -294,7 +316,6 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
              <Select label="Clínica de la cual egresa" options={CLINICAS_ORIGEN} value={clinicaEgreso} onChange={e => setClinicaEgreso(e.target.value)} required />
              <Input label="Diagnóstico de egreso (CIE 10)" type="text" value={diagnosticoEgreso} onChange={e => setDiagnosticoEgreso(e.target.value)} required />
              <Input label="Fecha de Ingreso" type="date" value={fechaIngreso} onChange={e => setFechaIngreso(e.target.value)} required disabled={isEditMode} />
-             {/* Programa selector moved to Step 1 */}
              <div className="flex items-start">
                 <div className="flex items-center h-5">
                   <input id="alergia" type="checkbox" className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300 rounded" checked={alergicoMedicamentos} onChange={e => setAlergicoMedicamentos(e.target.checked)} />

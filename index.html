@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
   <head>
@@ -21,97 +20,143 @@
       }
     </script>
     
-    <!-- Import Map for React 18 -->
-    <script type="importmap-shim">
-    {
-      "imports": {
-        "react": "https://esm.sh/react@18.2.0",
-        "react-dom": "https://esm.sh/react-dom@18.2.0",
-        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-        "@google/genai": "https://esm.sh/@google/genai"
-      }
-    }
-    </script>
-    
-    <!-- Load Sucrase from unpkg for better reliability -->
-    <script src="https://unpkg.com/sucrase@3.35.0/dist/index.js" crossorigin="anonymous"></script>
+    <!-- 1. Load React and ReactDOM globally (UMD) -->
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.development.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.development.js"></script>
 
-    <!-- Configure module shim with fetch hook -->
+    <!-- 2. Process Shim -->
     <script>
+      window.process = window.process || {};
+      window.process.env = window.process.env || {};
+      if (!window.process.env.NODE_ENV) {
+        window.process.env.NODE_ENV = 'development';
+      }
+    </script>
+
+    <!-- 3. Load Babel Standalone -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    
+    <!-- 4. Setup Import Map Shim & Fetch Hook -->
+    <script>
+      // Helper to create Blob URLs for virtual modules
+      const createBlob = (code) => URL.createObjectURL(new Blob([code], { type: 'text/javascript' }));
+
+      // Virtual Module: React (proxies to window.React)
+      const reactShim = `
+        export default window.React;
+        export const { 
+          useState, useEffect, useContext, createContext, useReducer, 
+          useCallback, useMemo, useRef, useImperativeHandle, useLayoutEffect, 
+          useDebugValue, Fragment, StrictMode, Component, PureComponent, memo, 
+          createElement, cloneElement, isValidElement, Children 
+        } = window.React;
+      `;
+
+      // Virtual Module: ReactDOM (proxies to window.ReactDOM)
+      const reactDomShim = `
+        export default window.ReactDOM;
+        export const { createRoot, hydrateRoot, render, unmountComponentAtNode } = window.ReactDOM;
+      `;
+
+      // Virtual Module: JSX Runtime (proxies to window.React.createElement)
+      const jsxShim = `
+        export const Fragment = window.React.Fragment;
+        export function jsx(type, props, key) {
+          if (key !== undefined && key !== null) props.key = key;
+          return window.React.createElement(type, props);
+        }
+        export const jsxs = jsx;
+        export const jsxDEV = jsx;
+      `;
+
+      // Define the Import Map using these virtual modules
+      const importMap = {
+        imports: {
+          "react": createBlob(reactShim),
+          "react-dom": createBlob(reactDomShim),
+          "react-dom/client": createBlob(reactDomShim),
+          "react/jsx-runtime": createBlob(jsxShim),
+          "react/jsx-dev-runtime": createBlob(jsxShim),
+          "@google/genai": "https://esm.sh/@google/genai"
+        }
+      };
+
+      // Inject the importmap-shim script into the DOM
+      const imScript = document.createElement('script');
+      imScript.type = "importmap-shim";
+      imScript.textContent = JSON.stringify(importMap);
+      document.head.appendChild(imScript);
+
+      // Configure es-module-shims to intercept .tsx files and compile them with Babel
       window.esmsInitOptions = {
         shimMode: true,
         fetch: async (url, options) => {
-          try {
-            const res = await fetch(url, options);
-            if (!res.ok) return res;
-
-            const path = new URL(url, window.location.href).pathname;
-            if (path.endsWith('.tsx') || path.endsWith('.ts')) {
+          const urlObj = new URL(url);
+          // Only intercept requests for .tsx or .ts files from our origin
+          if (urlObj.origin === window.location.origin && /\.(tsx|ts)$/.test(urlObj.pathname)) {
+            try {
+              const res = await fetch(url);
+              if (!res.ok) throw new Error(`Failed to load ${url}: ${res.status} ${res.statusText}`);
               const source = await res.text();
               
-              if (!window.sucrase) {
-                 console.error("Sucrase not loaded for " + path);
-                 return new Response("console.error('Sucrase compiler not loaded. Please refresh the page.');", { 
-                     headers: { 'content-type': 'application/javascript' } 
-                 });
-              }
-              
-              try {
-                const { code } = window.sucrase.transform(source, {
-                  transforms: ["typescript", "jsx"],
-                  jsxRuntime: "classic",
-                  production: false,
-                  filePath: path,
-                });
-                
-                return new Response(code, {
-                  headers: { 'content-type': 'application/javascript' }
-                });
-              } catch (e) {
-                console.error("Error transforming " + path, e);
-                return new Response(`console.error('Transform error: ' + ${JSON.stringify(e.message)});`, {
-                    headers: { 'content-type': 'application/javascript' }
-                });
-              }
+              // Compile TSX/TS to JS on the fly
+              const compiled = Babel.transform(source, {
+                filename: urlObj.pathname,
+                presets: [
+                  ['react', { runtime: 'classic' }], // Force classic runtime to avoid external dependency issues
+                  'typescript'
+                ],
+                sourceMaps: 'inline'
+              });
+
+              return new Response(compiled.code, {
+                headers: { 'Content-Type': 'application/javascript' }
+              });
+            } catch (e) {
+              console.error(e);
+              throw e;
             }
-            return res;
-          } catch (e) {
-            console.error("Fetch hook error", e);
-            throw e;
           }
-        },
+          // Fallback to default fetch for other files
+          return fetch(url, options);
+        }
       };
     </script>
 
-    <!-- Load es-module-shims -->
-    <script src="https://unpkg.com/es-module-shims@1.10.0/dist/es-module-shims.js"></script>
+    <!-- 5. Load es-module-shims -->
+    <script async src="https://ga.jspm.io/npm:es-module-shims@1.10.0/dist/es-module-shims.js"></script>
 
     <!-- Google Maps API -->
     <script>
-        // Placeholder callback to prevent console errors if the script loads before React
         window.initMap = function() {
             console.log('Google Maps API Loaded');
         }
     </script>
-    <!-- MarkerClusterer Library -->
     <script src="https://unpkg.com/@googlemaps/markerclusterer/dist/index.min.js"></script>
-
-    <!-- API Key Configurada -->
-    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB1NzlOyCNBTYwrV3f_TtKRprjrZDopQ8Q&callback=initMap"></script>
+    <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyB1NzlOyCNBTYwrV3f_TtKRprjrZDopQ8Q&libraries=places,geometry&callback=initMap"></script>
 <script type="importmap">
 {
   "imports": {
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
     "react": "https://aistudiocdn.com/react@^19.2.1",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.31.0"
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.32.0"
   }
 }
 </script>
 </head>
   <body class="bg-brand-gray">
-    <div id="root"></div>
+    <div id="root">
+        <div id="loading-spinner" class="min-h-screen flex flex-col items-center justify-center text-gray-500">
+            <svg class="animate-spin h-10 w-10 text-blue-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p>Cargando aplicación...</p>
+        </div>
+    </div>
     
+    <!-- Entry Point -->
     <script type="module-shim">
       import './index.tsx';
     </script>
