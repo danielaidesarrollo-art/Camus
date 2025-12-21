@@ -50,7 +50,7 @@ const RadioGroup: React.FC<{ legend: string, name: string, options: string[], se
         <div className="flex flex-col gap-1">
             {options.map(option => (
                 <label key={option} className="flex items-center text-sm">
-                    <input type="radio" name={name} value={option} checked={selectedValue === option} onChange={onChange} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300"/>
+                    <input type="radio" name={name} value={option} checked={selectedValue === option} onChange={onChange} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300" />
                     <span className="ml-2 text-gray-800">{option}</span>
                 </label>
             ))}
@@ -72,7 +72,7 @@ const HandoverForm: React.FC = () => {
     const [medDose, setMedDose] = useState<number | ''>('');
     const [medFreq, setMedFreq] = useState<number | ''>('');
     const [medDays, setMedDays] = useState<number | ''>('');
-    
+
     // Oxygen Doctor fields
     const [oxygenAction, setOxygenAction] = useState('');
     const [oxygenDevice, setOxygenDevice] = useState('');
@@ -81,12 +81,12 @@ const HandoverForm: React.FC = () => {
     const [labRequests, setLabRequests] = useState('');
     const [referralInfo, setReferralInfo] = useState('');
     const [dischargeOrders, setDischargeOrders] = useState('');
-    
+
     // Specific fields for ENFERMERO(A) JEFE PAD ADMINISTRATIVO
     const [ivAccessInfo, setIvAccessInfo] = useState('');
     const [phlebitisScale, setPhlebitisScale] = useState<number>(0);
     const [pressureUlcersInfo, setPressureUlcersInfo] = useState('');
-    
+
     // Specific fields for AUXILIAR DE ENFERMERIA
     const [signosVitales, setSignosVitales] = useState<VitalSigns>({ tensionArterial: '', frecuenciaCardiaca: '', frecuenciaRespiratoria: '', temperatura: '', saturacionO2: '' });
     const [administracionMedicamentos, setAdministracionMedicamentos] = useState('');
@@ -139,7 +139,7 @@ const HandoverForm: React.FC = () => {
         if (!Array.isArray(patients)) {
             return [];
         }
-        return patients.filter(p => 
+        return patients.filter(p =>
             p &&
             (typeof p.id === 'string' || typeof p.id === 'number') &&
             typeof p.nombreCompleto === 'string' &&
@@ -148,7 +148,7 @@ const HandoverForm: React.FC = () => {
     }, [patients]);
 
     const userCargo = user?.cargo || '';
-    
+
     // Role Detection
     const isMedico = userCargo === 'MEDICO DOMICILIARIO';
     const isJefeEnfermeria = userCargo === 'ENFERMERO(A) JEFE PAD ADMINISTRATIVO' || userCargo === 'ENFERMERO(A) JEFE PAD';
@@ -160,7 +160,7 @@ const HandoverForm: React.FC = () => {
     const resetForms = () => {
         setSelectedPatientId('');
         setNote('');
-        
+
         // Medico
         setMedAction('');
         setMedAntibioticName('');
@@ -173,12 +173,12 @@ const HandoverForm: React.FC = () => {
         setLabRequests('');
         setReferralInfo('');
         setDischargeOrders('');
-        
+
         // Jefe
         setIvAccessInfo('');
         setPhlebitisScale(0);
         setPressureUlcersInfo('');
-        
+
         // Auxiliar
         setSignosVitales({ tensionArterial: '', frecuenciaCardiaca: '', frecuenciaRespiratoria: '', temperatura: '', saturacionO2: '' });
         setAdministracionMedicamentos('');
@@ -227,7 +227,7 @@ const HandoverForm: React.FC = () => {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         if (!selectedPatientId || !user) return;
-        
+
         const newNote: HandoverNote = {
             id: new Date().toISOString(),
             patientId: selectedPatientId,
@@ -318,48 +318,48 @@ const HandoverForm: React.FC = () => {
 
     const renderMedicoForm = () => (
         <div className="space-y-4">
-            <RadioGroup 
-                legend="Gestión de Antibióticos" 
-                name="medAction" 
-                options={ANTIBIOTIC_ACTIONS} 
-                selectedValue={medAction} 
-                onChange={e => setMedAction(e.target.value)} 
+            <RadioGroup
+                legend="Gestión de Antibióticos"
+                name="medAction"
+                options={ANTIBIOTIC_ACTIONS}
+                selectedValue={medAction}
+                onChange={e => setMedAction(e.target.value)}
             />
 
             {(medAction === "Iniciar Tratamiento" || medAction === "Cambiar Antibiótico") && (
                 <div className="bg-blue-50 p-4 rounded-md border border-blue-200 mt-2 space-y-3 animate-fade-in">
                     <h5 className="font-semibold text-brand-blue text-sm">Detalles de la Prescripción</h5>
-                    <Select 
-                        label="Antibiótico" 
+                    <Select
+                        label="Antibiótico"
                         id="antibioticSelect"
-                        options={ANTIBIOTICOS} 
-                        value={medAntibioticName} 
+                        options={ANTIBIOTICOS}
+                        value={medAntibioticName}
                         onChange={e => setMedAntibioticName(e.target.value)}
                         required={true}
                     />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Input 
-                            label="Dosis (mg)" 
-                            type="number" 
-                            value={medDose} 
-                            onChange={e => setMedDose(parseInt(e.target.value) || '')} 
-                            placeholder="Ej: 500" 
+                        <Input
+                            label="Dosis (mg)"
+                            type="number"
+                            value={medDose}
+                            onChange={e => setMedDose(parseInt(e.target.value) || '')}
+                            placeholder="Ej: 500"
                             required={true}
                         />
-                        <Input 
-                            label="Intervalo (Horas)" 
-                            type="number" 
-                            value={medFreq} 
-                            onChange={e => setMedFreq(parseInt(e.target.value) || '')} 
-                            placeholder="Ej: 8" 
+                        <Input
+                            label="Intervalo (Horas)"
+                            type="number"
+                            value={medFreq}
+                            onChange={e => setMedFreq(parseInt(e.target.value) || '')}
+                            placeholder="Ej: 8"
                             required={true}
                         />
-                        <Input 
-                            label="Días Prescritos" 
-                            type="number" 
-                            value={medDays} 
-                            onChange={e => setMedDays(parseInt(e.target.value) || '')} 
-                            placeholder="Ej: 7" 
+                        <Input
+                            label="Días Prescritos"
+                            type="number"
+                            value={medDays}
+                            onChange={e => setMedDays(parseInt(e.target.value) || '')}
+                            placeholder="Ej: 7"
                             required={true}
                         />
                     </div>
@@ -367,30 +367,30 @@ const HandoverForm: React.FC = () => {
             )}
 
             <div className="border-t pt-4">
-                <RadioGroup 
-                    legend="Gestión de Oxígeno" 
-                    name="oxygenAction" 
-                    options={OXYGEN_ACTIONS} 
-                    selectedValue={oxygenAction} 
-                    onChange={e => setOxygenAction(e.target.value)} 
+                <RadioGroup
+                    legend="Gestión de Oxígeno"
+                    name="oxygenAction"
+                    options={OXYGEN_ACTIONS}
+                    selectedValue={oxygenAction}
+                    onChange={e => setOxygenAction(e.target.value)}
                 />
-                
+
                 {oxygenAction === "Sí, iniciar/continuar oxígeno" && (
                     <div className="bg-blue-50 p-4 rounded-md border border-blue-200 mt-2 grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
-                        <Select 
-                            label="Dispositivo" 
+                        <Select
+                            label="Dispositivo"
                             id="oxDevice"
-                            options={OXIGENO_DISPOSITIVOS} 
-                            value={oxygenDevice} 
+                            options={OXIGENO_DISPOSITIVOS}
+                            value={oxygenDevice}
                             onChange={e => setOxygenDevice(e.target.value)}
                             required={true}
                         />
-                        <Input 
-                            label="Litros por minuto" 
-                            type="number" 
-                            value={oxygenLiters} 
-                            onChange={e => setOxygenLiters(parseFloat(e.target.value) || '')} 
-                            placeholder="Ej: 2" 
+                        <Input
+                            label="Litros por minuto"
+                            type="number"
+                            value={oxygenLiters}
+                            onChange={e => setOxygenLiters(parseFloat(e.target.value) || '')}
+                            placeholder="Ej: 2"
                             step="0.5"
                             required={true}
                         />
@@ -405,17 +405,17 @@ const HandoverForm: React.FC = () => {
     );
 
     const renderJefeEnfermeriaForm = () => (
-         <>
+        <>
             <Input label="Verificación de accesos venosos (punciones, cambios)" value={ivAccessInfo} onChange={e => setIvAccessInfo(e.target.value)} />
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">Escala de Flebitis (0-4)</label>
-              <select value={phlebitisScale} onChange={e => setPhlebitisScale(Number(e.target.value))} className="w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue">
-                  <option value={0}>0 - Sin síntomas</option>
-                  <option value={1}>1 - Eritema</option>
-                  <option value={2}>2 - Dolor, eritema, edema</option>
-                  <option value={3}>3 - Induración, cordón venoso palpable</option>
-                  <option value={4}>4 - Cordón venoso palpable > 2.5 cm, purulencia</option>
-              </select>
+                <label className="block text-sm font-medium text-gray-700">Escala de Flebitis (0-4)</label>
+                <select value={phlebitisScale} onChange={e => setPhlebitisScale(Number(e.target.value))} className="w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue">
+                    <option value={0}>0 - Sin síntomas</option>
+                    <option value={1}>1 - Eritema</option>
+                    <option value={2}>2 - Dolor, eritema, edema</option>
+                    <option value={3}>3 - Induración, cordón venoso palpable</option>
+                    <option value={4}>4 - Cordón venoso palpable &gt; 2.5 cm, purulencia</option>
+                </select>
             </div>
             <Input label="Presencia de úlceras por presión" value={pressureUlcersInfo} onChange={e => setPressureUlcersInfo(e.target.value)} />
         </>
@@ -447,10 +447,10 @@ const HandoverForm: React.FC = () => {
                 <div>
                     <RadioGroup legend="Administración de Medicamentos" name="medicamentos" options={MEDICAMENTOS_OPTIONS} selectedValue={administracionMedicamentos} onChange={e => setAdministracionMedicamentos(e.target.value)} />
                     <div className="mt-2">
-                         <button type="button" onClick={() => setShowInfusionGuide(!showInfusionGuide)} className="text-brand-blue text-sm underline font-medium hover:text-brand-lightblue transition-colors focus:outline-none">
-                           {showInfusionGuide ? 'Ocultar Guía de Infusión' : 'Ver Guía de Dilución y Tiempos de Infusión Recomendados'}
-                         </button>
-                         {showInfusionGuide && (
+                        <button type="button" onClick={() => setShowInfusionGuide(!showInfusionGuide)} className="text-brand-blue text-sm underline font-medium hover:text-brand-lightblue transition-colors focus:outline-none">
+                            {showInfusionGuide ? 'Ocultar Guía de Infusión' : 'Ver Guía de Dilución y Tiempos de Infusión Recomendados'}
+                        </button>
+                        {showInfusionGuide && (
                             <div className="mt-2 overflow-x-auto border border-gray-200 rounded-md shadow-sm bg-white">
                                 <table className="min-w-full text-xs text-left text-gray-700">
                                     <thead className="bg-gray-100 font-semibold text-gray-800 border-b">
@@ -473,7 +473,7 @@ const HandoverForm: React.FC = () => {
                                     </tbody>
                                 </table>
                             </div>
-                         )}
+                        )}
                     </div>
                 </div>
 
@@ -492,55 +492,55 @@ const HandoverForm: React.FC = () => {
 
     const renderFisioterapiaForm = () => (
         <div className="space-y-4">
-             <RadioGroup legend="Modalidad Realizada" name="fisioModalidad" options={MODALIDAD_FISIO_OPTIONS} selectedValue={fisioModalidad} onChange={e => setFisioModalidad(e.target.value)} />
-             
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <RadioGroup legend="Modalidad Realizada" name="fisioModalidad" options={MODALIDAD_FISIO_OPTIONS} selectedValue={fisioModalidad} onChange={e => setFisioModalidad(e.target.value)} />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input label="Auscultación Pulmonar" value={fisioAuscultacion} onChange={e => setFisioAuscultacion(e.target.value)} placeholder="Ruidos sobreagregados" />
                 <Input label="Patrón Respiratorio" value={fisioPatron} onChange={e => setFisioPatron(e.target.value)} placeholder="Costal, Diafragmático..." />
-             </div>
-             
-             <RadioGroup legend="Manejo de Secreciones" name="fisioSecreciones" options={SECRECIONES_OPTIONS} selectedValue={fisioSecreciones} onChange={e => setFisioSecreciones(e.target.value)} />
-             <Input label="Movilidad y Fuerza Muscular" value={fisioMovilidad} onChange={e => setFisioMovilidad(e.target.value)} placeholder="Ej: Movilidad activa 4/5" />
-             
-             <div className="border-t pt-4 mt-4">
-                 <h4 className="font-semibold text-gray-700 mb-3">Plan de Manejo y Pronóstico</h4>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <Input 
-                        label="Cantidad de terapias a realizar" 
-                        type="number" 
-                        value={fisioSesiones} 
-                        onChange={e => setFisioSesiones(parseInt(e.target.value) || '')} 
+            </div>
+
+            <RadioGroup legend="Manejo de Secreciones" name="fisioSecreciones" options={SECRECIONES_OPTIONS} selectedValue={fisioSecreciones} onChange={e => setFisioSecreciones(e.target.value)} />
+            <Input label="Movilidad y Fuerza Muscular" value={fisioMovilidad} onChange={e => setFisioMovilidad(e.target.value)} placeholder="Ej: Movilidad activa 4/5" />
+
+            <div className="border-t pt-4 mt-4">
+                <h4 className="font-semibold text-gray-700 mb-3">Plan de Manejo y Pronóstico</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <Input
+                        label="Cantidad de terapias a realizar"
+                        type="number"
+                        value={fisioSesiones}
+                        onChange={e => setFisioSesiones(parseInt(e.target.value) || '')}
                         placeholder="Ej: 10"
                         min="0"
                     />
-                    <Input 
-                        label="Duración estimada terapia (Meses)" 
-                        type="number" 
-                        value={fisioDuracion} 
-                        onChange={e => setFisioDuracion(parseInt(e.target.value) || '')} 
+                    <Input
+                        label="Duración estimada terapia (Meses)"
+                        type="number"
+                        value={fisioDuracion}
+                        onChange={e => setFisioDuracion(parseInt(e.target.value) || '')}
                         placeholder="Ej: 3"
                         min="0"
                     />
-                 </div>
-                 
-                 <div className="flex flex-col md:flex-row gap-6 mb-4">
-                     <div className="flex items-center">
+                </div>
+
+                <div className="flex flex-col md:flex-row gap-6 mb-4">
+                    <div className="flex items-center">
                         <input id="fisioEgreso" type="checkbox" checked={fisioEgreso} onChange={e => setFisioEgreso(e.target.checked)} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300 rounded" />
                         <label htmlFor="fisioEgreso" className="ml-2 block text-sm text-gray-900">Tiene egreso de rehabilitación</label>
-                     </div>
-                     <div className="flex items-center">
+                    </div>
+                    <div className="flex items-center">
                         <input id="fisioPlanCasero" type="checkbox" checked={fisioPlanCasero} onChange={e => setFisioPlanCasero(e.target.checked)} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300 rounded" />
                         <label htmlFor="fisioPlanCasero" className="ml-2 block text-sm text-gray-900">Se dejó plan casero</label>
-                     </div>
-                 </div>
+                    </div>
+                </div>
 
-                 <div>
+                <div>
                     <label htmlFor="fisioJustificacion" className="block text-sm font-medium text-gray-700 mb-1">Justificación de continuidad en rehabilitación</label>
                     <textarea id="fisioJustificacion" rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue" placeholder="Explique por qué el paciente debe continuar con el plan..." value={fisioJustificacion} onChange={e => setFisioJustificacion(e.target.value)} />
                 </div>
-             </div>
+            </div>
 
-             <div>
+            <div>
                 <label htmlFor="evolucionFisio" className="block text-sm font-medium text-gray-700 mb-1">Evolución y Notas Adicionales</label>
                 <textarea id="evolucionFisio" rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue" placeholder="Tolerancia al ejercicio, saturación, etc." value={note} onChange={e => setNote(e.target.value)} />
             </div>
@@ -553,46 +553,46 @@ const HandoverForm: React.FC = () => {
             <Input label="Componente Cognitivo" value={toCognitivo} onChange={e => setToCognitivo(e.target.value)} placeholder="Ej: Alerta, sigue instrucciones complejas, memoria conservada" />
             <Input label="Habilidades Motoras y Sensoriales" value={toMotor} onChange={e => setToMotor(e.target.value)} placeholder="Ej: Pinza fina conservada, coordinación ojo-mano adecuada" />
             <Input label="Adaptaciones del Entorno/Férulas" value={toAdaptaciones} onChange={e => setToAdaptaciones(e.target.value)} placeholder="Ej: Se indica uso de cojín antiescaras, adaptación de cubiertos" />
-             
-             <div className="border-t pt-4 mt-4">
-                 <h4 className="font-semibold text-gray-700 mb-3">Plan de Manejo y Pronóstico</h4>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <Input 
-                        label="Cantidad de Terapias" 
-                        type="number" 
-                        value={toSesiones} 
-                        onChange={e => setToSesiones(parseInt(e.target.value) || '')} 
+
+            <div className="border-t pt-4 mt-4">
+                <h4 className="font-semibold text-gray-700 mb-3">Plan de Manejo y Pronóstico</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <Input
+                        label="Cantidad de Terapias"
+                        type="number"
+                        value={toSesiones}
+                        onChange={e => setToSesiones(parseInt(e.target.value) || '')}
                         placeholder="Ej: 8"
                         min="0"
                     />
-                    <Input 
-                        label="Duración estimada en meses" 
-                        type="number" 
-                        value={toDuracion} 
-                        onChange={e => setToDuracion(parseInt(e.target.value) || '')} 
+                    <Input
+                        label="Duración estimada en meses"
+                        type="number"
+                        value={toDuracion}
+                        onChange={e => setToDuracion(parseInt(e.target.value) || '')}
                         placeholder="Ej: 2"
                         min="0"
                     />
-                 </div>
-                 
-                 <div className="flex flex-col md:flex-row gap-6 mb-4">
-                     <div className="flex items-center">
+                </div>
+
+                <div className="flex flex-col md:flex-row gap-6 mb-4">
+                    <div className="flex items-center">
                         <input id="toEgreso" type="checkbox" checked={toEgreso} onChange={e => setToEgreso(e.target.checked)} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300 rounded" />
                         <label htmlFor="toEgreso" className="ml-2 block text-sm text-gray-900">Egreso de Rehabilitación</label>
-                     </div>
-                     <div className="flex items-center">
+                    </div>
+                    <div className="flex items-center">
                         <input id="toPlanCasero" type="checkbox" checked={toPlanCasero} onChange={e => setToPlanCasero(e.target.checked)} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300 rounded" />
                         <label htmlFor="toPlanCasero" className="ml-2 block text-sm text-gray-900">Plan Casero</label>
-                     </div>
-                 </div>
+                    </div>
+                </div>
 
-                 <div>
+                <div>
                     <label htmlFor="toJustificacion" className="block text-sm font-medium text-gray-700 mb-1">Justificación de Continuidad</label>
                     <textarea id="toJustificacion" rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue" placeholder="Explique por qué el paciente debe continuar con el plan..." value={toJustificacion} onChange={e => setToJustificacion(e.target.value)} />
                 </div>
-             </div>
+            </div>
 
-             <div>
+            <div>
                 <label htmlFor="evolucionTO" className="block text-sm font-medium text-gray-700 mb-1">Evolución y Notas Adicionales</label>
                 <textarea id="evolucionTO" rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue" placeholder="Describa el progreso en la sesión y plan de tratamiento." value={note} onChange={e => setNote(e.target.value)} />
             </div>
@@ -601,59 +601,59 @@ const HandoverForm: React.FC = () => {
 
     const renderFonoaudiologiaForm = () => (
         <div className="space-y-4">
-             <RadioGroup legend="Vía de Alimentación Actual" name="fonoVia" options={VIA_ALIMENTACION_OPTIONS} selectedValue={fonoVia} onChange={e => setFonoVia(e.target.value)} />
-             <RadioGroup legend="Consistencia de Dieta Tolerada" name="fonoDieta" options={CONSISTENCIA_DIETA_OPTIONS} selectedValue={fonoDieta} onChange={e => setFonoDieta(e.target.value)} />
-             <Input label="Estado de la Deglución" value={fonoDeglucion} onChange={e => setFonoDeglucion(e.target.value)} placeholder="Ej: Deglución funcional, signos de penetración/aspiración con líquidos" />
-             <Input label="Estado Comunicativo / Lenguaje" value={fonoComunicacion} onChange={e => setFonoComunicacion(e.target.value)} placeholder="Ej: Lenguaje expresivo preservado, disartria leve, comprensible" />
-             
-             <div className="border-t pt-4 mt-4">
-                 <h4 className="font-semibold text-gray-700 mb-3">Plan de Manejo y Pronóstico</h4>
-                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <Input 
-                        label="Cantidad de terapias a realizar" 
-                        type="number" 
-                        value={fonoSesiones} 
-                        onChange={e => setFonoSesiones(parseInt(e.target.value) || '')} 
+            <RadioGroup legend="Vía de Alimentación Actual" name="fonoVia" options={VIA_ALIMENTACION_OPTIONS} selectedValue={fonoVia} onChange={e => setFonoVia(e.target.value)} />
+            <RadioGroup legend="Consistencia de Dieta Tolerada" name="fonoDieta" options={CONSISTENCIA_DIETA_OPTIONS} selectedValue={fonoDieta} onChange={e => setFonoDieta(e.target.value)} />
+            <Input label="Estado de la Deglución" value={fonoDeglucion} onChange={e => setFonoDeglucion(e.target.value)} placeholder="Ej: Deglución funcional, signos de penetración/aspiración con líquidos" />
+            <Input label="Estado Comunicativo / Lenguaje" value={fonoComunicacion} onChange={e => setFonoComunicacion(e.target.value)} placeholder="Ej: Lenguaje expresivo preservado, disartria leve, comprensible" />
+
+            <div className="border-t pt-4 mt-4">
+                <h4 className="font-semibold text-gray-700 mb-3">Plan de Manejo y Pronóstico</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <Input
+                        label="Cantidad de terapias a realizar"
+                        type="number"
+                        value={fonoSesiones}
+                        onChange={e => setFonoSesiones(parseInt(e.target.value) || '')}
                         placeholder="Ej: 12"
                         min="0"
                     />
-                    <Input 
-                        label="Duración estimada terapia (Meses)" 
-                        type="number" 
-                        value={fonoDuracion} 
-                        onChange={e => setFonoDuracion(parseInt(e.target.value) || '')} 
+                    <Input
+                        label="Duración estimada terapia (Meses)"
+                        type="number"
+                        value={fonoDuracion}
+                        onChange={e => setFonoDuracion(parseInt(e.target.value) || '')}
                         placeholder="Ej: 4"
                         min="0"
                     />
-                 </div>
-                 
-                 <div className="flex flex-col md:flex-row gap-6 mb-4">
-                     <div className="flex items-center">
+                </div>
+
+                <div className="flex flex-col md:flex-row gap-6 mb-4">
+                    <div className="flex items-center">
                         <input id="fonoEgreso" type="checkbox" checked={fonoEgreso} onChange={e => setFonoEgreso(e.target.checked)} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300 rounded" />
                         <label htmlFor="fonoEgreso" className="ml-2 block text-sm text-gray-900">Tiene egreso de rehabilitación</label>
-                     </div>
-                     <div className="flex items-center">
+                    </div>
+                    <div className="flex items-center">
                         <input id="fonoPlanCasero" type="checkbox" checked={fonoPlanCasero} onChange={e => setFonoPlanCasero(e.target.checked)} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300 rounded" />
                         <label htmlFor="fonoPlanCasero" className="ml-2 block text-sm text-gray-900">Se dejó plan casero</label>
-                     </div>
-                 </div>
+                    </div>
+                </div>
 
-                 <div>
+                <div>
                     <label htmlFor="fonoJustificacion" className="block text-sm font-medium text-gray-700 mb-1">Justificación de continuidad en rehabilitación</label>
                     <textarea id="fonoJustificacion" rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue" placeholder="Explique por qué el paciente debe continuar con el plan..." value={fonoJustificacion} onChange={e => setFonoJustificacion(e.target.value)} />
                 </div>
-             </div>
+            </div>
 
-             <div>
+            <div>
                 <label htmlFor="evolucionFono" className="block text-sm font-medium text-gray-700 mb-1">Evolución y Notas Adicionales</label>
                 <textarea id="evolucionFono" rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue" placeholder="Detalles de la sesión, ejercicios oromotores realizados y recomendaciones de alimentación." value={note} onChange={e => setNote(e.target.value)} />
             </div>
         </div>
     );
-    
+
     const renderGenericForm = () => (
         <div>
-             <label htmlFor="novedades" className="block text-sm font-medium text-gray-700 mb-1">Novedades del paciente</label>
+            <label htmlFor="novedades" className="block text-sm font-medium text-gray-700 mb-1">Novedades del paciente</label>
             <textarea
                 id="novedades"
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue"
@@ -673,7 +673,7 @@ const HandoverForm: React.FC = () => {
                 <form onSubmit={handleSubmit} className="space-y-6">
                     <div>
                         <label htmlFor="patient-select" className="block text-sm font-medium text-gray-700 mb-1">Seleccionar Paciente</label>
-                         <select
+                        <select
                             id="patient-select"
                             value={selectedPatientId}
                             onChange={(e) => setSelectedPatientId(e.target.value)}
@@ -687,26 +687,26 @@ const HandoverForm: React.FC = () => {
 
                     <div className="space-y-4">
                         <h3 className="font-semibold text-lg text-gray-700">Novedades para: <span className="text-brand-blue">{user?.cargo}</span></h3>
-                        
+
                         {isMedico && renderMedicoForm()}
                         {isJefeEnfermeria && renderJefeEnfermeriaForm()}
                         {isAuxiliar && renderAuxiliarForm()}
                         {isFisioterapeuta && renderFisioterapiaForm()}
                         {isTerapeutaOcupacional && renderTerapiaOcupacionalForm()}
                         {isFonoaudiologo && renderFonoaudiologiaForm()}
-                        
+
                         {/* If none of the specific roles match, show generic form */}
                         {!isMedico && !isJefeEnfermeria && !isAuxiliar && !isFisioterapeuta && !isTerapeutaOcupacional && !isFonoaudiologo && renderGenericForm()}
-                        
-                         {/* Common text area for Auxiliar (others have their own inside specific renders) */}
-                         {isAuxiliar && (
-                             <div>
+
+                        {/* Common text area for Auxiliar (others have their own inside specific renders) */}
+                        {isAuxiliar && (
+                            <div>
                                 <label htmlFor="novedadesAux" className="block text-sm font-medium text-gray-700 mb-1">Novedades y/o Pendientes</label>
                                 <textarea id="novedadesAux" rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue" placeholder="Observaciones generales..." value={note} onChange={e => setNote(e.target.value)} />
                             </div>
-                         )}
+                        )}
                     </div>
-                    
+
                     <div className="pt-4 border-t">
                         <Button type="submit" className="w-full md:w-auto" disabled={!selectedPatientId}>Registrar Novedad</Button>
                     </div>
