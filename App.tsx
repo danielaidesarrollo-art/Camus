@@ -1,42 +1,38 @@
-
 import React from 'react';
 import Login from './components/Login.tsx';
 import Dashboard from './components/Dashboard.tsx';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
-
-const LoadingScreen: React.FC = () => (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-        <p className="text-xl text-gray-600">Cargando aplicación...</p>
-    </div>
-);
-
-const ErrorScreen: React.FC<{ message: string | null }> = ({ message }) => (
-    <div className="min-h-screen flex items-center justify-center bg-brand-gray p-4">
-        <div className="w-full max-w-lg p-8 space-y-6 bg-white rounded-xl shadow-lg text-center">
-            <h1 className="text-2xl font-bold text-red-600">Error Crítico</h1>
-            <p className="text-gray-700">
-                {message || "Ocurrió un error inesperado al iniciar la aplicación."}
-            </p>
-            <button
-                onClick={() => window.location.reload()}
-                className="mt-4 px-4 py-2 bg-brand-blue text-white rounded-md font-semibold hover:bg-brand-lightblue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue"
-            >
-                Recargar Aplicación
-            </button>
-        </div>
-    </div>
-);
 
 const AppContent: React.FC = () => {
     // Fix: Destructure properties directly from useAppContext as the 'state' object is no longer part of the context type.
     const { isLoading, error, user } = useAppContext();
 
     if (isLoading) {
-        return <LoadingScreen />;
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#0B0E14]">
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-[#00E5FF]/20 border-t-[#00E5FF] rounded-full animate-spin"></div>
+                    <p className="text-[#00E5FF] font-medium animate-pulse">Cargando Camus...</p>
+                </div>
+            </div>
+        );
     }
 
     if (error) {
-        return <ErrorScreen message={error} />;
+        return (
+            <div className="min-h-screen flex items-center justify-center bg-[#0B0E14] p-4">
+                <div className="glass-panel p-8 max-w-lg w-full text-center space-y-6">
+                    <h1 className="text-2xl font-bold text-red-500 font-outfit">Error Crítico</h1>
+                    <p className="text-gray-400">{error}</p>
+                    <button
+                        onClick={() => window.location.reload()}
+                        className="px-6 py-3 bg-[#00E5FF] text-[#0B0E14] rounded-xl font-bold hover:bg-[#00B8CC] transition-all"
+                    >
+                        Recargar Aplicación
+                    </button>
+                </div>
+            </div>
+        );
     }
 
     return !user ? <Login /> : <Dashboard />;
@@ -45,9 +41,7 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
     return (
         <AppProvider>
-            <div className="min-h-screen bg-gray-100">
-                <AppContent />
-            </div>
+            <AppContent />
         </AppProvider>
     );
 };

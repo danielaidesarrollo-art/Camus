@@ -2,11 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { Patient, AntibioticTreatment } from '../types.ts';
 import { useAppContext } from '../context/AppContext.tsx';
-import Input from './ui/Input.tsx';
-import Select from './ui/Select.tsx';
-import Button from './ui/Button.tsx';
-import Card from './ui/Card.tsx';
-import { DOCUMENT_TYPES, CLINICAS_ORIGEN, PROGRAMAS, TERAPIAS_HOSPITALARIO, TERAPIAS_CRONICO, TERAPIAS_PALIATIVO, ANTIBIOTICOS, OXIGENO_DISPOSITIVOS, SONDA_TIPOS, GLUCOMETRIA_FRECUENCIAS, calculateAge } from '../constants.tsx';
+import { GlassCard, GlassButton, GlassInput, GlassSelect } from './ui/GlassComponents.tsx';
+import { DOCUMENT_TYPES, CLINICAS_ORIGEN, PROGRAMAS, TERAPIAS_HOSPITALARIO, TERAPIAS_CRONICO, TERAPIAS_PALIATIVO, ANTIBIOTICOS, OXIGENO_DISPOSITIVOS, SONDA_TIPOS, GLUCOMETRIA_FRECUENCIAS, calculateAge, Icons } from '../constants.tsx';
 import { isPointInPolygon, geocodeAddress, COVERAGE_POLYGON } from '../utils/geolocation.ts';
 
 interface PatientIntakeFormProps {
@@ -18,9 +15,9 @@ interface PatientIntakeFormProps {
 const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patientToEdit = null, onClose }) => {
     const { user } = useAppContext();
     const isEditMode = !!patientToEdit;
-    
+
     const [step, setStep] = useState(1);
-    
+
     // Patient data
     const [tipoDocumento, setTipoDocumento] = useState(patientToEdit?.tipoDocumento || '');
     const [id, setId] = useState(patientToEdit?.id || '');
@@ -31,7 +28,7 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
     const [telefonoMovil, setTelefonoMovil] = useState(patientToEdit?.telefonoMovil || '');
     const [cuidadorPrincipal, setCuidadorPrincipal] = useState(patientToEdit?.cuidadorPrincipal || '');
     const [telefonoCuidador, setTelefonoCuidador] = useState(patientToEdit?.telefonoCuidador || '');
-    
+
     // Geolocation state
     const [coverageStatus, setCoverageStatus] = useState<'idle' | 'loading' | 'success' | 'outside' | 'error' | 'manual'>(() => {
         if (isEditMode && patientToEdit?.coordinates) {
@@ -39,7 +36,7 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
         }
         return 'idle';
     });
-    const [coordinates, setCoordinates] = useState<{lat: number, lng: number} | undefined>(patientToEdit?.coordinates);
+    const [coordinates, setCoordinates] = useState<{ lat: number, lng: number } | undefined>(patientToEdit?.coordinates);
 
     // Clinical data
     const [clinicaEgreso, setClinicaEgreso] = useState(patientToEdit?.clinicaEgreso || '');
@@ -55,7 +52,7 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
     });
     const [programa, setPrograma] = useState(patientToEdit?.programa || '');
     const [terapias, setTerapias] = useState<{ [key: string]: boolean }>(patientToEdit?.terapias || {});
-    
+
     // Therapy specifics
     const [oxigenoDispositivo, setOxigenoDispositivo] = useState(patientToEdit?.oxigeno?.dispositivo || '');
     const [oxigenoLitraje, setOxigenoLitraje] = useState(patientToEdit?.oxigeno?.litraje || 0);
@@ -67,20 +64,19 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
 
     const [errors, setErrors] = useState<{ [key: string]: string }>({});
 
-
     useEffect(() => {
         if (!isEditMode) {
-             if (programa === PROGRAMAS[0]) {
-                 setTerapias(TERAPIAS_HOSPITALARIO);
-             } else if (programa === PROGRAMAS[1]) {
-                 setTerapias(TERAPIAS_CRONICO);
-                 setTelefonoFijo(''); // Clear fixed phone if not Hospitalario
-             } else if (programa === PROGRAMAS[2]) {
-                 setTerapias(TERAPIAS_PALIATIVO);
-                 setTelefonoFijo(''); // Clear fixed phone if not Hospitalario
-             } else {
-                 setTerapias({});
-             }
+            if (programa === PROGRAMAS[0]) {
+                setTerapias(TERAPIAS_HOSPITALARIO);
+            } else if (programa === PROGRAMAS[1]) {
+                setTerapias(TERAPIAS_CRONICO);
+                setTelefonoFijo('');
+            } else if (programa === PROGRAMAS[2]) {
+                setTerapias(TERAPIAS_PALIATIVO);
+                setTelefonoFijo('');
+            } else {
+                setTerapias({});
+            }
         }
     }, [programa, isEditMode]);
 
@@ -91,7 +87,7 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
         setCoverageStatus('idle');
         setCoordinates(undefined);
     }, [direccion, isEditMode, patientToEdit]);
-    
+
     const calculateAntibioticDays = (start: string, end: string) => {
         if (!start || !end) return { total: 0, current: 0 };
         const startDate = new Date(start);
@@ -103,25 +99,20 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
     };
 
     const handleTherapyChange = (terapia: string) => {
-        setTerapias(prev => ({...prev, [terapia]: !prev[terapia]}));
+        setTerapias(prev => ({ ...prev, [terapia]: !prev[terapia] }));
     };
 
     const handleVerifyCoverage = async () => {
-        if (!direccion) {
-            alert('Por favor, ingrese una dirección para verificar.');
-            return;
-        }
+        if (!direccion) return;
         setCoverageStatus('loading');
-        
+
         let addressToVerify = direccion;
-        // Basic check to see if city/country is already present to avoid duplication
         if (!addressToVerify.toLowerCase().includes('bogota') && !addressToVerify.toLowerCase().includes('soacha')) {
             addressToVerify += ", Bogotá, Colombia";
         }
 
         try {
             const coords = await geocodeAddress(addressToVerify);
-            
             if (coords) {
                 const isInside = isPointInPolygon(coords, COVERAGE_POLYGON);
                 setCoverageStatus(isInside ? 'success' : 'outside');
@@ -131,42 +122,31 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
                 setCoordinates(undefined);
             }
         } catch (error) {
-            console.error("Verification failed", error);
             setCoverageStatus('error');
         }
     };
-    
+
     const handleForceManual = () => {
         if (confirm("¿Está seguro de forzar el ingreso? Si la dirección no es válida, la geolocalización no funcionará en el mapa.")) {
-             setCoverageStatus('manual');
+            setCoverageStatus('manual');
         }
     };
 
     const validateForm = () => {
         const newErrors: { [key: string]: string } = {};
-
         if (terapias['Aplicación de terapia antibiótica']) {
             const mg = antibiotico.miligramos;
-            if (mg === undefined || mg === null || isNaN(mg) || mg <= 0) {
-                newErrors.miligramos = 'La dosis debe ser un número positivo.';
-            }
-
+            if (mg === undefined || mg === null || isNaN(mg) || mg <= 0) newErrors.miligramos = 'La dosis debe ser un número positivo.';
             const freq = antibiotico.frecuenciaHoras;
-            if (freq === undefined || freq === null || isNaN(freq) || freq <= 0) {
-                newErrors.frecuenciaHoras = 'La frecuencia debe ser un número positivo.';
-            }
+            if (freq === undefined || freq === null || isNaN(freq) || freq <= 0) newErrors.frecuenciaHoras = 'La frecuencia debe ser un número positivo.';
         }
-
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
-    
+
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        
-        if (!validateForm()) {
-            return;
-        }
+        if (!validateForm()) return;
 
         let finalAntibiotic: AntibioticTreatment | undefined = undefined;
         if (terapias['Aplicación de terapia antibiótica'] && antibiotico.medicamento && antibiotico.fechaInicio && antibiotico.fechaTerminacion && antibiotico.miligramos && antibiotico.frecuenciaHoras) {
@@ -188,7 +168,7 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
             nombreCompleto,
             fechaNacimiento,
             direccion,
-            coordinates, // Saving coordinates to patient object
+            coordinates,
             telefonoFijo,
             telefonoMovil,
             cuidadorPrincipal,
@@ -215,204 +195,208 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
     const renderCoverageStatus = () => {
         switch (coverageStatus) {
             case 'loading':
-                return <div className="flex items-center gap-2 mt-1 text-sm text-gray-600"><svg className="animate-spin h-4 w-4 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><span>Verificando...</span></div>;
+                return <div className="flex items-center gap-2 mt-2 p-2 bg-white/5 rounded-lg text-xs text-gray-400">
+                    <svg className="animate-spin h-3 w-3 text-[#00E5FF]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    Verificando coordenadas...
+                </div>;
             case 'success':
-                return <div className="flex items-center gap-2 mt-1 text-sm text-green-700 font-medium"><svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg><span>Domicilio dentro del área de cobertura.</span></div>;
+                return <div className="flex items-center gap-2 mt-2 p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-xs text-emerald-400 font-bold uppercase tracking-wider">
+                    {Icons.Plus} Cobertura Confirmada
+                </div>;
             case 'outside':
-                return (
-                    <div className="mt-1 text-sm">
-                        <div className="flex items-center gap-2 font-medium text-red-700">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" /></svg>
-                            <span>Domicilio fuera del área de cobertura.</span>
-                        </div>
-                        <p className="mt-1 text-gray-600 pl-7">
-                            El paciente no puede ser ingresado automáticamente. Puede continuar el registro y quedará en 'Pendiente' para revisión manual.
-                        </p>
+                return <div className="mt-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                    <div className="flex items-center gap-2 text-xs font-bold text-red-400 uppercase tracking-widest">
+                        ⚠ Cobertura Externa
                     </div>
-                );
+                    <p className="mt-1 text-[10px] text-gray-500 leading-tight">El ingreso quedará sujeto a revisión administrativa.</p>
+                </div>;
             case 'manual':
-                 return (
-                    <div className="mt-1 text-sm text-yellow-700">
-                        <div className="flex items-center gap-2 font-medium">
-                           <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /></svg>
-                            <span>Ingreso manual habilitado.</span>
-                        </div>
-                         <p className="text-xs pl-7 mt-1">Se guardará sin coordenadas precisas.</p>
-                    </div>
-                 );
+                return <div className="flex items-center gap-2 mt-2 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-xs text-yellow-400 font-bold uppercase tracking-wider">
+                    Ingreso manual activado
+                </div>;
             case 'error':
-                 return (
-                    <div className="mt-1 text-sm text-yellow-700">
-                        <div className="flex items-center gap-2 font-medium">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.21 3.03-1.742 3.03H4.42c-1.532 0-2.492-1.696-1.742-3.03l5.58-9.92zM10 13a1 1 0 110-2 1 1 0 010 2zm-1-4a1 1 0 011-1h.01a1 1 0 110 2H10a1 1 0 01-1-1z" clipRule="evenodd" /></svg>
-                            <span>No se pudo verificar la dirección.</span>
-                        </div>
-                        <div className="pl-7 mt-1">
-                             <p className="text-xs mb-1">Puede intentar corregir la dirección o usar el ingreso manual.</p>
-                             <button onClick={handleForceManual} type="button" className="text-blue-600 underline text-xs font-semibold hover:text-blue-800">Forzar Ingreso Manual</button>
-                        </div>
+                return <div className="mt-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                    <div className="flex items-center gap-2 text-xs font-bold text-yellow-400 uppercase tracking-widest">
+                        No se pudo verificar
                     </div>
-                 );
-            default:
-                return <div className="h-6 mt-1" />;
+                    <button onClick={handleForceManual} type="button" className="mt-1 text-[10px] text-[#00E5FF] font-bold uppercase underline">Forzar Ingreso Manual</button>
+                </div>;
+            default: return null;
         }
     };
 
+    const ProgressBar = ({ currentStep }: { currentStep: number }) => (
+        <div className="flex gap-2 mb-8">
+            {[1, 2, 3].map(s => (
+                <div key={s} className={`h-1.5 flex-grow rounded-full transition-all duration-500 ${s <= currentStep ? 'bg-[#00E5FF] glow-cyan' : 'bg-white/10'}`} />
+            ))}
+        </div>
+    );
+
     const renderStepOne = () => {
-        // Allows continuing if success, outside, OR manual override is active
         const isNextDisabled = !['success', 'outside', 'manual'].includes(coverageStatus) || !programa;
-        
         return (
-            <div className="space-y-4">
-                <h3 className="text-lg font-medium text-gray-900">1. Identificación del Paciente</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <Select label="Tipo de Documento" options={DOCUMENT_TYPES} value={tipoDocumento} onChange={e => setTipoDocumento(e.target.value)} required disabled={isEditMode} />
-                    <Input label="Número de Documento" type="text" value={id} onChange={e => setId(e.target.value)} required disabled={isEditMode} />
-                    <Input label="Nombres y Apellidos Completos" type="text" value={nombreCompleto} onChange={e => setNombreCompleto(e.target.value)} required className="md:col-span-2" />
-                    
-                    <div className="flex flex-col justify-start">
-                        <Input label="Fecha de Nacimiento" type="date" value={fechaNacimiento} onChange={e => setFechaNacimiento(e.target.value)} required />
-                        <p className="text-sm text-gray-600 mt-1">Edad: {calculateAge(fechaNacimiento)} años</p>
+            <div className="space-y-6 animate-fade-in">
+                <ProgressBar currentStep={1} />
+                <h3 className="text-xl font-bold text-white font-outfit uppercase tracking-tight">1. Identificación y Ubicación</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <GlassSelect label="Tipo de Documento" options={DOCUMENT_TYPES} value={tipoDocumento} onChange={e => setTipoDocumento(e.target.value)} required disabled={isEditMode} />
+                    <GlassInput label="Número de Documento" type="text" value={id} onChange={e => setId(e.target.value)} required disabled={isEditMode} />
+                    <GlassInput label="Nombre Completo" type="text" value={nombreCompleto} onChange={e => setNombreCompleto(e.target.value)} required className="md:col-span-2" />
+
+                    <div className="space-y-2">
+                        <GlassInput label="Fecha de Nacimiento" type="date" value={fechaNacimiento} onChange={e => setFechaNacimiento(e.target.value)} required />
+                        <p className="text-[10px] font-bold text-[#00E5FF] uppercase tracking-widest ml-1">{calculateAge(fechaNacimiento)} años detectados</p>
                     </div>
-                    
-                    <Select 
-                        label="Programa al que ingresa" 
-                        options={PROGRAMAS} 
-                        value={programa} 
-                        onChange={e => setPrograma(e.target.value)} 
-                        required 
-                    />
-                    
+
+                    <GlassSelect label="Programa" options={PROGRAMAS} value={programa} onChange={e => setPrograma(e.target.value)} required />
+
                     <div className="md:col-span-2">
-                        <div className="flex flex-col sm:flex-row sm:items-end sm:gap-2">
-                            <div className="flex-grow"><Input label="Dirección de Residencia" type="text" value={direccion} onChange={e => setDireccion(e.target.value)} required /></div>
-                            <Button type="button" variant="secondary" onClick={handleVerifyCoverage} disabled={coverageStatus === 'loading' || !direccion} className="mt-2 sm:mt-0 flex-shrink-0">{coverageStatus === 'loading' ? 'Verificando...' : 'Verificar Cobertura'}</Button>
+                        <div className="flex flex-col md:flex-row md:items-end gap-3">
+                            <div className="flex-grow"><GlassInput label="Dirección de Residencia" type="text" value={direccion} onChange={e => setDireccion(e.target.value)} required /></div>
+                            <GlassButton type="button" variant="outline" onClick={handleVerifyCoverage} disabled={coverageStatus === 'loading' || !direccion} className="md:h-[50px]">
+                                {coverageStatus === 'loading' ? 'Verificando...' : 'Verificar'}
+                            </GlassButton>
                         </div>
                         {renderCoverageStatus()}
                     </div>
 
-                    {programa === PROGRAMAS[0] && (
-                         <Input label="Teléfono Fijo" type="tel" value={telefonoFijo} onChange={e => setTelefonoFijo(e.target.value)} />
-                    )}
-
-                    <Input label="Teléfono Móvil" type="tel" value={telefonoMovil} onChange={e => setTelefonoMovil(e.target.value)} required />
-                    <Input label="Nombre del Cuidador Principal" type="text" value={cuidadorPrincipal} onChange={e => setCuidadorPrincipal(e.target.value)} required />
-                    <Input label="Teléfono Móvil del Cuidador" type="tel" value={telefonoCuidador} onChange={e => setTelefonoCuidador(e.target.value)} required />
+                    {programa === PROGRAMAS[0] && <GlassInput label="Teléfono Fijo" type="tel" value={telefonoFijo} onChange={e => setTelefonoFijo(e.target.value)} />}
+                    <GlassInput label="Teléfono Móvil" type="tel" value={telefonoMovil} onChange={e => setTelefonoMovil(e.target.value)} required />
+                    <GlassInput label="Cuidador Principal" type="text" value={cuidadorPrincipal} onChange={e => setCuidadorPrincipal(e.target.value)} required />
+                    <GlassInput label="Teléfono Cuidador" type="tel" value={telefonoCuidador} onChange={e => setTelefonoCuidador(e.target.value)} required />
                 </div>
-                 <div className="flex items-center justify-between pt-4">
-                    <Button type="button" variant="secondary" onClick={onClose}>Cancelar</Button>
-                    <div>
-                        <Button onClick={() => setStep(2)} disabled={isNextDisabled}>Siguiente</Button>
-                        {isNextDisabled && <p className="text-xs text-gray-500 mt-2 text-right">Debe verificar la dirección.</p>}
-                    </div>
+                <div className="flex items-center justify-between pt-8 border-t border-white/5">
+                    <GlassButton type="button" variant="ghost" onClick={onClose}>Cancelar</GlassButton>
+                    <GlassButton glow onClick={() => setStep(2)} disabled={isNextDisabled}>Siguiente Paso</GlassButton>
                 </div>
             </div>
         );
     };
-    
+
     const renderStepTwo = () => (
-        <div className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">2. Datos Clínicos</h3>
-             <Select label="Clínica de la cual egresa" options={CLINICAS_ORIGEN} value={clinicaEgreso} onChange={e => setClinicaEgreso(e.target.value)} required />
-             <Input label="Diagnóstico de egreso (CIE 10)" type="text" value={diagnosticoEgreso} onChange={e => setDiagnosticoEgreso(e.target.value)} required />
-             <Input label="Fecha de Ingreso" type="date" value={fechaIngreso} onChange={e => setFechaIngreso(e.target.value)} required disabled={isEditMode} />
-             <div className="flex items-start">
-                <div className="flex items-center h-5">
-                  <input id="alergia" type="checkbox" className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300 rounded" checked={alergicoMedicamentos} onChange={e => setAlergicoMedicamentos(e.target.checked)} />
-                </div>
-                <div className="ml-3 text-sm flex-grow">
-                  <label htmlFor="alergia" className="font-medium text-gray-700">¿Paciente alérgico a algún medicamento?</label>
-                  {alergicoMedicamentos && (
-                    <Input id="alergia-info" type="text" placeholder="Especifique cuál(es)" value={alergiasInfo} onChange={e => setAlergiasInfo(e.target.value)} className="mt-2"/>
-                  )}
+        <div className="space-y-6 animate-fade-in">
+            <ProgressBar currentStep={2} />
+            <h3 className="text-xl font-bold text-white font-outfit uppercase tracking-tight">2. Resumen Clínico</h3>
+            <div className="grid grid-cols-1 gap-6">
+                <GlassSelect label="Clínica de Origen" options={CLINICAS_ORIGEN} value={clinicaEgreso} onChange={e => setClinicaEgreso(e.target.value)} required />
+                <GlassInput label="Diagnóstico CIE 10" type="text" value={diagnosticoEgreso} onChange={e => setDiagnosticoEgreso(e.target.value)} required />
+                <GlassInput label="Fecha Efectiva de Ingreso" type="date" value={fechaIngreso} onChange={e => setFechaIngreso(e.target.value)} required disabled={isEditMode} />
+
+                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${alergicoMedicamentos ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
+                            {alergicoMedicamentos && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
+                        </div>
+                        <input type="checkbox" className="hidden" checked={alergicoMedicamentos} onChange={e => setAlergicoMedicamentos(e.target.checked)} />
+                        <span className="text-sm font-medium text-gray-300">¿Paciente alérgico a medicamentos?</span>
+                    </label>
+                    {alergicoMedicamentos && (
+                        <div className="mt-4 animate-slide-up">
+                            <GlassInput placeholder="Describa medicamentos y reacciones" value={alergiasInfo} onChange={e => setAlergiasInfo(e.target.value)} />
+                        </div>
+                    )}
                 </div>
             </div>
-            <div className="flex justify-between pt-4">
-                <Button variant="secondary" onClick={() => setStep(1)}>Anterior</Button>
-                <Button onClick={() => setStep(3)}>Siguiente</Button>
+            <div className="flex justify-between pt-8 border-t border-white/5">
+                <GlassButton variant="ghost" onClick={() => setStep(1)}>Atrás</GlassButton>
+                <GlassButton glow onClick={() => setStep(3)}>Configurar Terapias</GlassButton>
             </div>
         </div>
     );
-    
+
     const renderStepThree = () => (
-         <form onSubmit={handleSubmit} className="space-y-4">
-            <h3 className="text-lg font-medium text-gray-900">3. Terapias Requeridas</h3>
-            <div className="space-y-2">
+        <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
+            <ProgressBar currentStep={3} />
+            <h3 className="text-xl font-bold text-white font-outfit uppercase tracking-tight">3. Plan de Cuidados</h3>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-white/5 border border-white/10">
                 {Object.keys(terapias).map(terapia => (
-                    <div key={terapia} className="flex items-center">
-                        <input id={terapia} type="checkbox" checked={!!terapias[terapia]} onChange={() => handleTherapyChange(terapia)} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300 rounded" />
-                        <label htmlFor={terapia} className="ml-2 block text-sm text-gray-900 capitalize">{terapia.replace(/ \(.+?\)/g, '')}</label>
-                    </div>
+                    <label key={terapia} className="flex items-center gap-3 cursor-pointer group p-2 hover:bg-white/5 rounded-xl transition-colors">
+                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${terapias[terapia] ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
+                            {terapias[terapia] && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
+                        </div>
+                        <input type="checkbox" className="hidden" checked={!!terapias[terapia]} onChange={() => handleTherapyChange(terapia)} />
+                        <span className="text-xs font-medium text-gray-400 uppercase tracking-tight group-hover:text-white transition-colors">
+                            {terapia.replace(/ \(.+?\)/g, '')}
+                        </span>
+                    </label>
                 ))}
             </div>
 
-            {terapias['Oxígeno'] && (
-                 <Card title="Detalles de Oxígeno" className="mt-4 bg-gray-50">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Select label="Tipo de Dispositivo" options={OXIGENO_DISPOSITIVOS} value={oxigenoDispositivo} onChange={e => setOxigenoDispositivo(e.target.value)} required />
-                        <Input label="Litraje (L/min)" type="number" value={oxigenoLitraje} onChange={e => setOxigenoLitraje(parseFloat(e.target.value))} required />
-                    </div>
-                </Card>
-            )}
+            <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                {terapias['Oxígeno'] && (
+                    <GlassCard className="!bg-[#00E5FF]/5 border-[#00E5FF]/20">
+                        <h4 className="text-[10px] font-bold text-[#00E5FF] uppercase tracking-[0.2em] mb-4">Parámetros de Oxígeno</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <GlassSelect label="Dispositivo" options={OXIGENO_DISPOSITIVOS} value={oxigenoDispositivo} onChange={e => setOxigenoDispositivo(e.target.value)} required />
+                            <GlassInput label="Litraje (L/min)" type="number" value={oxigenoLitraje} onChange={e => setOxigenoLitraje(parseFloat(e.target.value))} required />
+                        </div>
+                    </GlassCard>
+                )}
 
-             {terapias['Aplicación de terapia antibiótica'] && (
-                 <Card title="Detalles de Terapia Antibiótica" className="mt-4 bg-gray-50">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         <Select label="Medicamento" options={ANTIBIOTICOS} value={antibiotico.medicamento} onChange={e => setAntibiotico(p => ({...p, medicamento: e.target.value}))} required />
-                         <div>
-                            <Input label="Dosis (mg)" type="number" value={antibiotico.miligramos || ''} onChange={e => setAntibiotico(p => ({...p, miligramos: parseFloat(e.target.value)}))} required />
-                            {errors.miligramos && <p className="text-red-500 text-xs mt-1">{errors.miligramos}</p>}
-                            <p className="text-xs text-gray-500 mt-1">Ingrese solo el valor numérico en miligramos.</p>
-                         </div>
-                         <div>
-                            <Input label="Frecuencia (horas)" type="number" value={antibiotico.frecuenciaHoras || ''} onChange={e => setAntibiotico(p => ({...p, frecuenciaHoras: parseInt(e.target.value)}))} required />
-                            {errors.frecuenciaHoras && <p className="text-red-500 text-xs mt-1">{errors.frecuenciaHoras}</p>}
-                            <p className="text-xs text-gray-500 mt-1">Ingrese el intervalo en horas (ej: 8, 12, 24).</p>
-                         </div>
-                         <div className="md:col-span-2 grid grid-cols-2 gap-4">
-                             <Input label="Fecha de Inicio" type="date" value={antibiotico.fechaInicio || ''} onChange={e => setAntibiotico(p => ({...p, fechaInicio: e.target.value}))} required />
-                             <Input label="Fecha de Terminación" type="date" value={antibiotico.fechaTerminacion || ''} onChange={e => setAntibiotico(p => ({...p, fechaTerminacion: e.target.value}))} required />
-                         </div>
-                    </div>
-                </Card>
-            )}
-            
-            {terapias['Manejo de Sondas'] && (
-                 <Card title="Detalles de Sondas" className="mt-4 bg-gray-50">
-                     <Select label="Tipo de Sonda" options={SONDA_TIPOS} value={sondaInfo.tipo} onChange={e => setSondaInfo(p => ({...p, tipo: e.target.value}))} required />
-                </Card>
-            )}
+                {terapias['Aplicación de terapia antibiótica'] && (
+                    <GlassCard className="!bg-[#10B981]/5 border-[#10B981]/20">
+                        <h4 className="text-[10px] font-bold text-[#10B981] uppercase tracking-[0.2em] mb-4">Esquema Antibiótico</h4>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <GlassSelect label="Fármaco" options={ANTIBIOTICOS} value={antibiotico.medicamento} onChange={e => setAntibiotico(p => ({ ...p, medicamento: e.target.value }))} required />
+                            <div>
+                                <GlassInput label="Dosis (mg)" type="number" value={antibiotico.miligramos || ''} onChange={e => setAntibiotico(p => ({ ...p, miligramos: parseFloat(e.target.value) }))} required />
+                                {errors.miligramos && <p className="text-red-400 text-[10px] mt-1 font-bold">{errors.miligramos}</p>}
+                            </div>
+                            <div>
+                                <GlassInput label="Intervalo (Horas)" type="number" value={antibiotico.frecuenciaHoras || ''} onChange={e => setAntibiotico(p => ({ ...p, frecuenciaHoras: parseInt(e.target.value) }))} required />
+                                {errors.frecuenciaHoras && <p className="text-red-400 text-[10px] mt-1 font-bold">{errors.frecuenciaHoras}</p>}
+                            </div>
+                            <div className="md:col-span-2 grid grid-cols-2 gap-4">
+                                <GlassInput label="F. Inicio" type="date" value={antibiotico.fechaInicio || ''} onChange={e => setAntibiotico(p => ({ ...p, fechaInicio: e.target.value }))} required />
+                                <GlassInput label="F. Fin" type="date" value={antibiotico.fechaTerminacion || ''} onChange={e => setAntibiotico(p => ({ ...p, fechaTerminacion: e.target.value }))} required />
+                            </div>
+                        </div>
+                    </GlassCard>
+                )}
 
-            {terapias['curación mayor en casa por enfermería'] && (
-                 <Card title="Detalles de Heridas/Curaciones" className="mt-4 bg-gray-50">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <Input label="Tipo de Herida" type="text" value={heridaInfo.tipo} onChange={e => setHeridaInfo(p => ({...p, tipo: e.target.value}))} required />
-                        <Input label="Localización" type="text" value={heridaInfo.localizacion} onChange={e => setHeridaInfo(p => ({...p, localizacion: e.target.value}))} required />
-                    </div>
-                </Card>
-            )}
+                {terapias['Manejo de Sondas'] && (
+                    <GlassCard className="!bg-white/5 border-white/10">
+                        <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Gestión de Sondas</h4>
+                        <GlassSelect label="Tipo" options={SONDA_TIPOS} value={sondaInfo.tipo} onChange={e => setSondaInfo(p => ({ ...p, tipo: e.target.value }))} required />
+                    </GlassCard>
+                )}
 
-            {terapias['Toma de glucometrías'] && (
-                 <Card title="Detalles de Glucometrías" className="mt-4 bg-gray-50">
-                    <Select label="Frecuencia" options={GLUCOMETRIA_FRECUENCIAS} value={glucometriaInfo.frecuencia} onChange={e => setGlucometriaInfo(p => ({...p, frecuencia: e.target.value}))} required />
-                </Card>
-            )}
+                {terapias['curación mayor en casa por enfermería'] && (
+                    <GlassCard className="!bg-white/5 border-white/10">
+                        <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Curaciones</h4>
+                        <div className="grid grid-cols-2 gap-4">
+                            <GlassInput label="Tipo Herida" value={heridaInfo.tipo} onChange={e => setHeridaInfo(p => ({ ...p, tipo: e.target.value }))} required />
+                            <GlassInput label="Ubicación" value={heridaInfo.localizacion} onChange={e => setHeridaInfo(p => ({ ...p, localizacion: e.target.value }))} required />
+                        </div>
+                    </GlassCard>
+                )}
 
-            {terapias['Otras terapias'] && (
-                <Card title="Detalles de Otras Terapias" className="mt-4 bg-gray-50">
-                    <Input label="Especifique" type="text" value={otrasTerapiasInfo} onChange={e => setOtrasTerapiasInfo(e.target.value)} required />
-                </Card>
-            )}
+                {terapias['Toma de glucometrías'] && (
+                    <GlassCard className="!bg-white/5 border-white/10">
+                        <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Monitoreo Metabólico</h4>
+                        <GlassSelect label="Frecuencia" options={GLUCOMETRIA_FRECUENCIAS} value={glucometriaInfo.frecuencia} onChange={e => setGlucometriaInfo(p => ({ ...p, frecuencia: e.target.value }))} required />
+                    </GlassCard>
+                )}
 
-            <div className="flex justify-between pt-4">
-                <Button variant="secondary" onClick={() => setStep(2)}>Anterior</Button>
-                <Button type="submit">{isEditMode ? 'Guardar Cambios' : 'Guardar Paciente'}</Button>
+                {terapias['Otras terapias'] && (
+                    <GlassCard className="!bg-white/5 border-white/10">
+                        <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Observaciones Adicionales</h4>
+                        <GlassInput label="Descripción" value={otrasTerapiasInfo} onChange={e => setOtrasTerapiasInfo(e.target.value)} required />
+                    </GlassCard>
+                )}
+            </div>
+
+            <div className="flex justify-between pt-8 border-t border-white/5">
+                <GlassButton variant="ghost" onClick={() => setStep(2)}>Atrás</GlassButton>
+                <GlassButton glow type="submit">{isEditMode ? 'Actualizar Ficha' : 'Confirmar Ingreso'}</GlassButton>
             </div>
         </form>
     );
 
     return (
-        <div>
+        <div className="max-w-2xl mx-auto">
             {step === 1 && renderStepOne()}
             {step === 2 && renderStepTwo()}
             {step === 3 && renderStepThree()}

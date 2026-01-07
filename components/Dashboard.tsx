@@ -9,20 +9,17 @@ import ProfileView from './ProfileView.tsx';
 import MapView from './MapView.tsx';
 import RoutePlanner from './RoutePlanner.tsx';
 import StaffManagement from './StaffManagement.tsx';
-import ProductionOrderView from './ProductionOrderView.tsx'; // New Import
+import ProductionOrderView from './ProductionOrderView.tsx';
 
 const Dashboard: React.FC = () => {
     const [activeView, setActiveView] = useState('dashboard');
 
-    // Ensure that if the view state is ever invalid, it defaults back to the patient list.
-    // This makes the navigation more robust and aligns with ensuring the patient list is the primary view.
     useEffect(() => {
         const validViews = ['dashboard', 'handover', 'schedule', 'profile', 'map', 'routes', 'staff', 'production'];
         if (!validViews.includes(activeView)) {
             setActiveView('dashboard');
         }
     }, [activeView]);
-
 
     const renderView = () => {
         switch (activeView) {
@@ -43,17 +40,25 @@ const Dashboard: React.FC = () => {
             case 'staff':
                 return <StaffManagement />;
             default:
-                // Render the patient list as a safe fallback while the useEffect corrects the state.
                 return <PatientList />;
         }
     }
 
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-screen flex flex-col bg-[#0B0E14] font-inter">
+            {/* Background decorative glows */}
+            <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-[#00E5FF] opacity-[0.03] blur-[150px] pointer-events-none"></div>
+            <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-[#00E5FF] opacity-[0.03] blur-[150px] pointer-events-none"></div>
+
             <Navbar onNavigate={setActiveView} activeView={activeView} />
-            <main className="flex-grow p-4 md:p-8">
-                {renderView()}
+
+            <main className="flex-grow p-4 md:p-8 relative z-10 overflow-x-hidden">
+                <div className="max-w-7xl mx-auto animate-fade-in">
+                    {renderView()}
+                </div>
             </main>
+
+            {/* Fixed Bottom Nav for Mobile on Omega (Triage) view could go here if needed per Stitch specs */}
         </div>
     );
 };

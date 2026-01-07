@@ -1,13 +1,9 @@
 
-
 import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { HandoverNote } from '../types.ts';
-import Card from './ui/Card.tsx';
-import Button from './ui/Button.tsx';
-import Input from './ui/Input.tsx';
-import Select from './ui/Select.tsx';
-import { GUIA_INFUSION_ANTIBIOTICOS, ANTIBIOTICOS, OXIGENO_DISPOSITIVOS } from '../constants.tsx';
+import { GlassCard, GlassButton, GlassInput, GlassSelect, GlassRadioGroup, GlassTextArea } from './ui/GlassComponents.tsx';
+import { GUIA_INFUSION_ANTIBIOTICOS, ANTIBIOTICOS, OXIGENO_DISPOSITIVOS, Icons } from '../constants.tsx';
 
 // --- Constants based on the Google Form ---
 const VITAL_SIGNS_OPTIONS = ["Tomado y Registrado en Historia Clinica", "No se toma por orden médica", "Paciente no permite la toma"];
@@ -42,21 +38,6 @@ const VITAL_SIGNS_FIELDS: { key: keyof VitalSigns; label: string }[] = [
     { key: 'temperatura', label: 'Temperatura' },
     { key: 'saturacionO2', label: 'Saturación O2' },
 ];
-
-// --- Reusable Radio Group Component ---
-const RadioGroup: React.FC<{ legend: string, name: string, options: string[], selectedValue: string, onChange: (e: React.ChangeEvent<HTMLInputElement>) => void }> = ({ legend, name, options, selectedValue, onChange }) => (
-    <fieldset className="space-y-1">
-        <legend className="text-sm font-medium text-gray-700">{legend}</legend>
-        <div className="flex flex-col gap-1">
-            {options.map(option => (
-                <label key={option} className="flex items-center text-sm">
-                    <input type="radio" name={name} value={option} checked={selectedValue === option} onChange={onChange} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300" />
-                    <span className="ml-2 text-gray-800">{option}</span>
-                </label>
-            ))}
-        </div>
-    </fieldset>
-);
 
 
 const HandoverForm: React.FC = () => {
@@ -316,10 +297,11 @@ const HandoverForm: React.FC = () => {
         alert('Novedad de turno registrada exitosamente.');
     };
 
+
     const renderMedicoForm = () => (
-        <div className="space-y-4">
-            <RadioGroup
-                legend="Gestión de Antibióticos"
+        <div className="space-y-6 animate-fade-in">
+            <GlassRadioGroup
+                label="Gestión de Antibióticos"
                 name="medAction"
                 options={ANTIBIOTIC_ACTIONS}
                 selectedValue={medAction}
@@ -327,48 +309,47 @@ const HandoverForm: React.FC = () => {
             />
 
             {(medAction === "Iniciar Tratamiento" || medAction === "Cambiar Antibiótico") && (
-                <div className="bg-blue-50 p-4 rounded-md border border-blue-200 mt-2 space-y-3 animate-fade-in">
-                    <h5 className="font-semibold text-brand-blue text-sm">Detalles de la Prescripción</h5>
-                    <Select
+                <GlassCard className="!bg-[#00E5FF]/5 border-[#00E5FF]/20 space-y-4">
+                    <h5 className="text-[10px] font-bold text-[#00E5FF] uppercase tracking-[0.2em]">Detalles de la Prescripción</h5>
+                    <GlassSelect
                         label="Antibiótico"
-                        id="antibioticSelect"
                         options={ANTIBIOTICOS}
                         value={medAntibioticName}
                         onChange={e => setMedAntibioticName(e.target.value)}
-                        required={true}
+                        required
                     />
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <Input
+                        <GlassInput
                             label="Dosis (mg)"
                             type="number"
                             value={medDose}
                             onChange={e => setMedDose(parseInt(e.target.value) || '')}
                             placeholder="Ej: 500"
-                            required={true}
+                            required
                         />
-                        <Input
-                            label="Intervalo (Horas)"
+                        <GlassInput
+                            label="Intervalo (Hrs)"
                             type="number"
                             value={medFreq}
                             onChange={e => setMedFreq(parseInt(e.target.value) || '')}
                             placeholder="Ej: 8"
-                            required={true}
+                            required
                         />
-                        <Input
-                            label="Días Prescritos"
+                        <GlassInput
+                            label="Días"
                             type="number"
                             value={medDays}
                             onChange={e => setMedDays(parseInt(e.target.value) || '')}
                             placeholder="Ej: 7"
-                            required={true}
+                            required
                         />
                     </div>
-                </div>
+                </GlassCard>
             )}
 
-            <div className="border-t pt-4">
-                <RadioGroup
-                    legend="Gestión de Oxígeno"
+            <div className="border-t border-white/5 pt-6">
+                <GlassRadioGroup
+                    label="Gestión de Oxígeno"
                     name="oxygenAction"
                     options={OXYGEN_ACTIONS}
                     selectedValue={oxygenAction}
@@ -376,49 +357,55 @@ const HandoverForm: React.FC = () => {
                 />
 
                 {oxygenAction === "Sí, iniciar/continuar oxígeno" && (
-                    <div className="bg-blue-50 p-4 rounded-md border border-blue-200 mt-2 grid grid-cols-1 md:grid-cols-2 gap-4 animate-fade-in">
-                        <Select
+                    <GlassCard className="!bg-[#00E5FF]/5 border-[#00E5FF]/20 mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <GlassSelect
                             label="Dispositivo"
-                            id="oxDevice"
                             options={OXIGENO_DISPOSITIVOS}
                             value={oxygenDevice}
                             onChange={e => setOxygenDevice(e.target.value)}
-                            required={true}
+                            required
                         />
-                        <Input
-                            label="Litros por minuto"
+                        <GlassInput
+                            label="Litros / min"
                             type="number"
                             value={oxygenLiters}
                             onChange={e => setOxygenLiters(parseFloat(e.target.value) || '')}
                             placeholder="Ej: 2"
                             step="0.5"
-                            required={true}
+                            required
                         />
-                    </div>
+                    </GlassCard>
                 )}
             </div>
 
-            <Input label="Solicitud de laboratorios" value={labRequests} onChange={e => setLabRequests(e.target.value)} />
-            <Input label="Solicitud de remisiones por deterioro" value={referralInfo} onChange={e => setReferralInfo(e.target.value)} />
-            <Input label="Salida del paciente y órdenes" value={dischargeOrders} onChange={e => setDischargeOrders(e.target.value)} />
+            <div className="space-y-4">
+                <GlassInput label="Laboratorios Solicitados" value={labRequests} onChange={e => setLabRequests(e.target.value)} />
+                <GlassInput label="Remisiones / Deterioro" value={referralInfo} onChange={e => setReferralInfo(e.target.value)} />
+                <GlassInput label="Plan de Egreso / Órdenes" value={dischargeOrders} onChange={e => setDischargeOrders(e.target.value)} />
+            </div>
         </div>
     );
 
+
     const renderJefeEnfermeriaForm = () => (
-        <>
-            <Input label="Verificación de accesos venosos (punciones, cambios)" value={ivAccessInfo} onChange={e => setIvAccessInfo(e.target.value)} />
-            <div className="space-y-1">
-                <label className="block text-sm font-medium text-gray-700">Escala de Flebitis (0-4)</label>
-                <select value={phlebitisScale} onChange={e => setPhlebitisScale(Number(e.target.value))} className="w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue">
-                    <option value={0}>0 - Sin síntomas</option>
-                    <option value={1}>1 - Eritema</option>
-                    <option value={2}>2 - Dolor, eritema, edema</option>
-                    <option value={3}>3 - Induración, cordón venoso palpable</option>
-                    <option value={4}>4 - Cordón venoso palpable &gt; 2.5 cm, purulencia</option>
+        <div className="space-y-6 animate-fade-in">
+            <GlassInput label="Accesos Venosos (Punciones/Cambios)" value={ivAccessInfo} onChange={e => setIvAccessInfo(e.target.value)} />
+            <div className="space-y-2">
+                <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Escala de Flebitis (0-4)</label>
+                <select
+                    value={phlebitisScale}
+                    onChange={e => setPhlebitisScale(Number(e.target.value))}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00E5FF] focus:ring-1 focus:ring-[#00E5FF] transition-all appearance-none cursor-pointer"
+                >
+                    <option value={0} className="bg-[#0B0E14]">0 - Sin síntomas</option>
+                    <option value={1} className="bg-[#0B0E14]">1 - Eritema</option>
+                    <option value={2} className="bg-[#0B0E14]">2 - Dolor, eritema, edema</option>
+                    <option value={3} className="bg-[#0B0E14]">3 - Induración, cordón palpable</option>
+                    <option value={4} className="bg-[#0B0E14]">4 - Cordón palpable &gt; 2.5 cm, purulencia</option>
                 </select>
             </div>
-            <Input label="Presencia de úlceras por presión" value={pressureUlcersInfo} onChange={e => setPressureUlcersInfo(e.target.value)} />
-        </>
+            <GlassInput label="Úlceras por Presión / Estado" value={pressureUlcersInfo} onChange={e => setPressureUlcersInfo(e.target.value)} />
+        </div>
     );
 
     const handleSignosVitalesChange = (key: keyof VitalSigns, value: string) => {
@@ -426,48 +413,45 @@ const HandoverForm: React.FC = () => {
     };
 
     const renderAuxiliarForm = () => (
-        <div className="space-y-6">
-            <fieldset>
-                <legend className="text-base font-semibold text-gray-800 border-b pb-2 mb-2">Signos vitales</legend>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
-                    {VITAL_SIGNS_FIELDS.map(field => (
-                        <RadioGroup
-                            key={field.key}
-                            legend={field.label}
-                            name={field.key}
-                            options={VITAL_SIGNS_OPTIONS}
-                            selectedValue={signosVitales[field.key]}
-                            onChange={(e) => handleSignosVitalesChange(field.key, e.target.value)}
-                        />
-                    ))}
-                </div>
-            </fieldset>
+        <div className="space-y-8 animate-fade-in">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                {VITAL_SIGNS_FIELDS.map(field => (
+                    <GlassRadioGroup
+                        key={field.key}
+                        label={field.label}
+                        name={field.key}
+                        options={VITAL_SIGNS_OPTIONS}
+                        selectedValue={signosVitales[field.key]}
+                        onChange={(e) => handleSignosVitalesChange(field.key, e.target.value)}
+                    />
+                ))}
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+            <div className="border-t border-white/5 pt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div>
-                    <RadioGroup legend="Administración de Medicamentos" name="medicamentos" options={MEDICAMENTOS_OPTIONS} selectedValue={administracionMedicamentos} onChange={e => setAdministracionMedicamentos(e.target.value)} />
-                    <div className="mt-2">
-                        <button type="button" onClick={() => setShowInfusionGuide(!showInfusionGuide)} className="text-brand-blue text-sm underline font-medium hover:text-brand-lightblue transition-colors focus:outline-none">
-                            {showInfusionGuide ? 'Ocultar Guía de Infusión' : 'Ver Guía de Dilución y Tiempos de Infusión Recomendados'}
+                    <GlassRadioGroup label="Administración de Medicamentos" name="medicamentos" options={MEDICAMENTOS_OPTIONS} selectedValue={administracionMedicamentos} onChange={e => setAdministracionMedicamentos(e.target.value)} />
+                    <div className="mt-4">
+                        <button type="button" onClick={() => setShowInfusionGuide(!showInfusionGuide)} className="text-[#00E5FF] text-xs font-bold uppercase tracking-widest hover:text-[#00B8CC] transition-colors flex items-center gap-2">
+                            {showInfusionGuide ? '[-] Ocultar Guía' : '[+] Ver Guía de Infusión'}
                         </button>
                         {showInfusionGuide && (
-                            <div className="mt-2 overflow-x-auto border border-gray-200 rounded-md shadow-sm bg-white">
-                                <table className="min-w-full text-xs text-left text-gray-700">
-                                    <thead className="bg-gray-100 font-semibold text-gray-800 border-b">
+                            <div className="mt-4 overflow-hidden border border-white/10 rounded-xl bg-white/5 backdrop-blur-md animate-slide-up">
+                                <table className="min-w-full text-[10px] text-left text-gray-400">
+                                    <thead className="bg-white/5 font-bold text-gray-300 uppercase tracking-wider">
                                         <tr>
-                                            <th className="px-2 py-1">Antibiótico</th>
-                                            <th className="px-2 py-1">Vehículo</th>
-                                            <th className="px-2 py-1">Volumen</th>
-                                            <th className="px-2 py-1">Tiempo Infusión</th>
+                                            <th className="px-3 py-2">Antibiótico</th>
+                                            <th className="px-3 py-2">Vehículo</th>
+                                            <th className="px-3 py-2">Vol.</th>
+                                            <th className="px-3 py-2">Tiempo</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-gray-100">
+                                    <tbody className="divide-y divide-white/5">
                                         {GUIA_INFUSION_ANTIBIOTICOS.map((item, index) => (
-                                            <tr key={index} className={index % 2 === 0 ? 'bg-white' : 'bg-gray-50'}>
-                                                <td className="px-2 py-1 font-medium">{item.antibiotico}</td>
-                                                <td className="px-2 py-1">{item.vehiculo}</td>
-                                                <td className="px-2 py-1">{item.volumen}</td>
-                                                <td className="px-2 py-1">{item.tiempo}</td>
+                                            <tr key={index} className="hover:bg-white/5 transition-colors">
+                                                <td className="px-3 py-2 font-medium text-[#00E5FF]">{item.antibiotico}</td>
+                                                <td className="px-3 py-2">{item.vehiculo}</td>
+                                                <td className="px-3 py-2">{item.volumen}</td>
+                                                <td className="px-3 py-2">{item.tiempo}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -477,188 +461,210 @@ const HandoverForm: React.FC = () => {
                     </div>
                 </div>
 
-                <RadioGroup legend="Curaciones" name="curaciones" options={CURACIONES_OPTIONS} selectedValue={curaciones} onChange={e => setCuraciones(e.target.value)} />
-                <RadioGroup legend="Manejo de Sondas" name="sondas" options={SONDAS_OPTIONS} selectedValue={manejoSondas} onChange={e => setManejoSondas(e.target.value)} />
-                <RadioGroup legend="Toma de glucometrias" name="glucometrias" options={GLUCOMETRIAS_OPTIONS} selectedValue={tomaGlucometrias} onChange={e => setTomaGlucometrias(e.target.value)} />
-                <RadioGroup legend="Soporte Nutricional" name="nutricion" options={SOPORTE_NUTRICIONAL_OPTIONS} selectedValue={soporteNutricional} onChange={e => setSoporteNutricional(e.target.value)} />
+                <GlassRadioGroup label="Curaciones Realizadas" name="curaciones" options={CURACIONES_OPTIONS} selectedValue={curaciones} onChange={e => setCuraciones(e.target.value)} />
+                <GlassRadioGroup label="Manejo de Sondas" name="sondas" options={SONDAS_OPTIONS} selectedValue={manejoSondas} onChange={e => setManejoSondas(e.target.value)} />
+                <GlassRadioGroup label="Toma de Glucometrías" name="glucometrias" options={GLUCOMETRIAS_OPTIONS} selectedValue={tomaGlucometrias} onChange={e => setTomaGlucometrias(e.target.value)} />
+                <GlassRadioGroup label="Soporte Nutricional" name="nutricion" options={SOPORTE_NUTRICIONAL_OPTIONS} selectedValue={soporteNutricional} onChange={e => setSoporteNutricional(e.target.value)} />
             </div>
 
-            <div>
-                <label htmlFor="estadoPiel" className="block text-sm font-medium text-gray-700 mb-1">Estado de Piel</label>
-                <textarea id="estadoPiel" rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue" placeholder="Descripción de la piel, si hay presencia de lesiones, etc." value={estadoPiel} onChange={e => setEstadoPiel(e.target.value)} />
-            </div>
+            <GlassTextArea label="Estado de Piel / Hallazgos" placeholder="Descripción detallada de la piel..." value={estadoPiel} onChange={e => setEstadoPiel(e.target.value)} />
         </div>
     );
 
-    const renderFisioterapiaForm = () => (
-        <div className="space-y-4">
-            <RadioGroup legend="Modalidad Realizada" name="fisioModalidad" options={MODALIDAD_FISIO_OPTIONS} selectedValue={fisioModalidad} onChange={e => setFisioModalidad(e.target.value)} />
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input label="Auscultación Pulmonar" value={fisioAuscultacion} onChange={e => setFisioAuscultacion(e.target.value)} placeholder="Ruidos sobreagregados" />
-                <Input label="Patrón Respiratorio" value={fisioPatron} onChange={e => setFisioPatron(e.target.value)} placeholder="Costal, Diafragmático..." />
+    const renderFisioterapiaForm = () => (
+        <div className="space-y-8 animate-fade-in">
+            <GlassRadioGroup label="Modalidad Realizada" name="fisioModalidad" options={MODALIDAD_FISIO_OPTIONS} selectedValue={fisioModalidad} onChange={e => setFisioModalidad(e.target.value)} />
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <GlassInput label="Auscultación Pulmonar" value={fisioAuscultacion} onChange={e => setFisioAuscultacion(e.target.value)} placeholder="Ruidos sobreagregados..." />
+                <GlassInput label="Patrón Respiratorio" value={fisioPatron} onChange={e => setFisioPatron(e.target.value)} placeholder="Ej: Diafragmático" />
             </div>
 
-            <RadioGroup legend="Manejo de Secreciones" name="fisioSecreciones" options={SECRECIONES_OPTIONS} selectedValue={fisioSecreciones} onChange={e => setFisioSecreciones(e.target.value)} />
-            <Input label="Movilidad y Fuerza Muscular" value={fisioMovilidad} onChange={e => setFisioMovilidad(e.target.value)} placeholder="Ej: Movilidad activa 4/5" />
+            <GlassRadioGroup label="Manejo de Secreciones" name="fisioSecreciones" options={SECRECIONES_OPTIONS} selectedValue={fisioSecreciones} onChange={e => setFisioSecreciones(e.target.value)} />
+            <GlassInput label="Movilidad y Fuerza Muscular" value={fisioMovilidad} onChange={e => setFisioMovilidad(e.target.value)} placeholder="Ej: 4/5 Global" />
 
-            <div className="border-t pt-4 mt-4">
-                <h4 className="font-semibold text-gray-700 mb-3">Plan de Manejo y Pronóstico</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <Input
-                        label="Cantidad de terapias a realizar"
+            <GlassCard className="!bg-[#00E5FF]/5 border-[#00E5FF]/20 space-y-6">
+                <h4 className="text-[10px] font-bold text-[#00E5FF] uppercase tracking-[0.2em]">Plan de Manejo y Pronóstico</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <GlassInput
+                        label="Total Sesiones"
                         type="number"
                         value={fisioSesiones}
                         onChange={e => setFisioSesiones(parseInt(e.target.value) || '')}
-                        placeholder="Ej: 10"
-                        min="0"
+                        placeholder="10"
                     />
-                    <Input
-                        label="Duración estimada terapia (Meses)"
+                    <GlassInput
+                        label="Duración (Meses)"
                         type="number"
                         value={fisioDuracion}
                         onChange={e => setFisioDuracion(parseInt(e.target.value) || '')}
-                        placeholder="Ej: 3"
-                        min="0"
+                        placeholder="3"
                     />
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-6 mb-4">
-                    <div className="flex items-center">
-                        <input id="fisioEgreso" type="checkbox" checked={fisioEgreso} onChange={e => setFisioEgreso(e.target.checked)} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300 rounded" />
-                        <label htmlFor="fisioEgreso" className="ml-2 block text-sm text-gray-900">Tiene egreso de rehabilitación</label>
-                    </div>
-                    <div className="flex items-center">
-                        <input id="fisioPlanCasero" type="checkbox" checked={fisioPlanCasero} onChange={e => setFisioPlanCasero(e.target.checked)} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300 rounded" />
-                        <label htmlFor="fisioPlanCasero" className="ml-2 block text-sm text-gray-900">Se dejó plan casero</label>
-                    </div>
+                <div className="flex flex-col md:flex-row gap-6">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${fisioEgreso ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
+                            {fisioEgreso && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
+                        </div>
+                        <input type="checkbox" className="hidden" checked={fisioEgreso} onChange={e => setFisioEgreso(e.target.checked)} />
+                        <span className="text-sm text-gray-400">Egreso de Rehabilitación</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${fisioPlanCasero ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
+                            {fisioPlanCasero && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
+                        </div>
+                        <input type="checkbox" className="hidden" checked={fisioPlanCasero} onChange={e => setFisioPlanCasero(e.target.checked)} />
+                        <span className="text-sm text-gray-400">Plan Casero Entregado</span>
+                    </label>
                 </div>
 
-                <div>
-                    <label htmlFor="fisioJustificacion" className="block text-sm font-medium text-gray-700 mb-1">Justificación de continuidad en rehabilitación</label>
-                    <textarea id="fisioJustificacion" rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue" placeholder="Explique por qué el paciente debe continuar con el plan..." value={fisioJustificacion} onChange={e => setFisioJustificacion(e.target.value)} />
-                </div>
-            </div>
+                <GlassTextArea
+                    label="Justificación de Continuidad"
+                    placeholder="Especifique objetivos pendientes..."
+                    value={fisioJustificacion}
+                    onChange={e => setFisioJustificacion(e.target.value)}
+                />
+            </GlassCard>
 
-            <div>
-                <label htmlFor="evolucionFisio" className="block text-sm font-medium text-gray-700 mb-1">Evolución y Notas Adicionales</label>
-                <textarea id="evolucionFisio" rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue" placeholder="Tolerancia al ejercicio, saturación, etc." value={note} onChange={e => setNote(e.target.value)} />
-            </div>
+            <GlassTextArea
+                label="Evolución y Notas Adicionales"
+                placeholder="Tolerancia, respuesta al tratamiento..."
+                value={note}
+                onChange={e => setNote(e.target.value)}
+            />
         </div>
     );
 
-    const renderTerapiaOcupacionalForm = () => (
-        <div className="space-y-4">
-            <Input label="Desempeño en AVD" value={toDesempenoAVD} onChange={e => setToDesempenoAVD(e.target.value)} placeholder="Ej: Independiente en alimentación, requiere asistencia para vestido" />
-            <Input label="Componente Cognitivo" value={toCognitivo} onChange={e => setToCognitivo(e.target.value)} placeholder="Ej: Alerta, sigue instrucciones complejas, memoria conservada" />
-            <Input label="Habilidades Motoras y Sensoriales" value={toMotor} onChange={e => setToMotor(e.target.value)} placeholder="Ej: Pinza fina conservada, coordinación ojo-mano adecuada" />
-            <Input label="Adaptaciones del Entorno/Férulas" value={toAdaptaciones} onChange={e => setToAdaptaciones(e.target.value)} placeholder="Ej: Se indica uso de cojín antiescaras, adaptación de cubiertos" />
 
-            <div className="border-t pt-4 mt-4">
-                <h4 className="font-semibold text-gray-700 mb-3">Plan de Manejo y Pronóstico</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <Input
-                        label="Cantidad de Terapias"
+    const renderTerapiaOcupacionalForm = () => (
+        <div className="space-y-8 animate-fade-in">
+            <GlassInput label="Desempeño en AVD" value={toDesempenoAVD} onChange={e => setToDesempenoAVD(e.target.value)} placeholder="Ej: Independiente en alimentación" />
+            <GlassInput label="Componente Cognitivo" value={toCognitivo} onChange={e => setToCognitivo(e.target.value)} placeholder="Ej: Alerta, orientado" />
+            <GlassInput label="Habilidades Motoras" value={toMotor} onChange={e => setToMotor(e.target.value)} placeholder="Ej: Pinza fina conservada" />
+            <GlassInput label="Adaptaciones / Entorno" value={toAdaptaciones} onChange={e => setToAdaptaciones(e.target.value)} placeholder="Ej: Cojín antiescaras" />
+
+            <GlassCard className="!bg-[#00E5FF]/5 border-[#00E5FF]/20 space-y-6">
+                <h4 className="text-[10px] font-bold text-[#00E5FF] uppercase tracking-[0.2em]">Plan de Manejo y Pronóstico</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <GlassInput
+                        label="Total Sesiones"
                         type="number"
                         value={toSesiones}
                         onChange={e => setToSesiones(parseInt(e.target.value) || '')}
-                        placeholder="Ej: 8"
-                        min="0"
+                        placeholder="8"
                     />
-                    <Input
-                        label="Duración estimada en meses"
+                    <GlassInput
+                        label="Duración (Meses)"
                         type="number"
                         value={toDuracion}
                         onChange={e => setToDuracion(parseInt(e.target.value) || '')}
-                        placeholder="Ej: 2"
-                        min="0"
+                        placeholder="2"
                     />
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-6 mb-4">
-                    <div className="flex items-center">
-                        <input id="toEgreso" type="checkbox" checked={toEgreso} onChange={e => setToEgreso(e.target.checked)} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300 rounded" />
-                        <label htmlFor="toEgreso" className="ml-2 block text-sm text-gray-900">Egreso de Rehabilitación</label>
-                    </div>
-                    <div className="flex items-center">
-                        <input id="toPlanCasero" type="checkbox" checked={toPlanCasero} onChange={e => setToPlanCasero(e.target.checked)} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300 rounded" />
-                        <label htmlFor="toPlanCasero" className="ml-2 block text-sm text-gray-900">Plan Casero</label>
-                    </div>
+                <div className="flex flex-col md:flex-row gap-6">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${toEgreso ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
+                            {toEgreso && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
+                        </div>
+                        <input type="checkbox" className="hidden" checked={toEgreso} onChange={e => setToEgreso(e.target.checked)} />
+                        <span className="text-sm text-gray-400">Egreso de Rehabilitación</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${toPlanCasero ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
+                            {toPlanCasero && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
+                        </div>
+                        <input type="checkbox" className="hidden" checked={toPlanCasero} onChange={e => setToPlanCasero(e.target.checked)} />
+                        <span className="text-sm text-gray-400">Plan Casero Entregado</span>
+                    </label>
                 </div>
 
-                <div>
-                    <label htmlFor="toJustificacion" className="block text-sm font-medium text-gray-700 mb-1">Justificación de Continuidad</label>
-                    <textarea id="toJustificacion" rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue" placeholder="Explique por qué el paciente debe continuar con el plan..." value={toJustificacion} onChange={e => setToJustificacion(e.target.value)} />
-                </div>
-            </div>
+                <GlassTextArea
+                    label="Justificación de Continuidad"
+                    placeholder="Especifique objetivos..."
+                    value={toJustificacion}
+                    onChange={e => setToJustificacion(e.target.value)}
+                />
+            </GlassCard>
 
-            <div>
-                <label htmlFor="evolucionTO" className="block text-sm font-medium text-gray-700 mb-1">Evolución y Notas Adicionales</label>
-                <textarea id="evolucionTO" rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue" placeholder="Describa el progreso en la sesión y plan de tratamiento." value={note} onChange={e => setNote(e.target.value)} />
-            </div>
+            <GlassTextArea
+                label="Evolución y Notas Adicionales"
+                placeholder="Describa el progreso..."
+                value={note}
+                onChange={e => setNote(e.target.value)}
+            />
         </div>
     );
 
     const renderFonoaudiologiaForm = () => (
-        <div className="space-y-4">
-            <RadioGroup legend="Vía de Alimentación Actual" name="fonoVia" options={VIA_ALIMENTACION_OPTIONS} selectedValue={fonoVia} onChange={e => setFonoVia(e.target.value)} />
-            <RadioGroup legend="Consistencia de Dieta Tolerada" name="fonoDieta" options={CONSISTENCIA_DIETA_OPTIONS} selectedValue={fonoDieta} onChange={e => setFonoDieta(e.target.value)} />
-            <Input label="Estado de la Deglución" value={fonoDeglucion} onChange={e => setFonoDeglucion(e.target.value)} placeholder="Ej: Deglución funcional, signos de penetración/aspiración con líquidos" />
-            <Input label="Estado Comunicativo / Lenguaje" value={fonoComunicacion} onChange={e => setFonoComunicacion(e.target.value)} placeholder="Ej: Lenguaje expresivo preservado, disartria leve, comprensible" />
+        <div className="space-y-8 animate-fade-in">
+            <GlassRadioGroup label="Vía de Alimentación" name="fonoVia" options={VIA_ALIMENTACION_OPTIONS} selectedValue={fonoVia} onChange={e => setFonoVia(e.target.value)} />
+            <GlassRadioGroup label="Consistencia de Dieta" name="fonoDieta" options={CONSISTENCIA_DIETA_OPTIONS} selectedValue={fonoDieta} onChange={e => setFonoDieta(e.target.value)} />
 
-            <div className="border-t pt-4 mt-4">
-                <h4 className="font-semibold text-gray-700 mb-3">Plan de Manejo y Pronóstico</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                    <Input
-                        label="Cantidad de terapias a realizar"
+            <GlassInput label="Estado de Deglución" value={fonoDeglucion} onChange={e => setFonoDeglucion(e.target.value)} placeholder="Ej: Funcional..." />
+            <GlassInput label="Lenguaje / Comunicación" value={fonoComunicacion} onChange={e => setFonoComunicacion(e.target.value)} placeholder="Ej: Disartria leve..." />
+
+            <GlassCard className="!bg-[#00E5FF]/5 border-[#00E5FF]/20 space-y-6">
+                <h4 className="text-[10px] font-bold text-[#00E5FF] uppercase tracking-[0.2em]">Plan de Manejo y Pronóstico</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <GlassInput
+                        label="Total Sesiones"
                         type="number"
                         value={fonoSesiones}
                         onChange={e => setFonoSesiones(parseInt(e.target.value) || '')}
-                        placeholder="Ej: 12"
-                        min="0"
+                        placeholder="12"
                     />
-                    <Input
-                        label="Duración estimada terapia (Meses)"
+                    <GlassInput
+                        label="Duración (Meses)"
                         type="number"
                         value={fonoDuracion}
                         onChange={e => setFonoDuracion(parseInt(e.target.value) || '')}
-                        placeholder="Ej: 4"
-                        min="0"
+                        placeholder="4"
                     />
                 </div>
 
-                <div className="flex flex-col md:flex-row gap-6 mb-4">
-                    <div className="flex items-center">
-                        <input id="fonoEgreso" type="checkbox" checked={fonoEgreso} onChange={e => setFonoEgreso(e.target.checked)} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300 rounded" />
-                        <label htmlFor="fonoEgreso" className="ml-2 block text-sm text-gray-900">Tiene egreso de rehabilitación</label>
-                    </div>
-                    <div className="flex items-center">
-                        <input id="fonoPlanCasero" type="checkbox" checked={fonoPlanCasero} onChange={e => setFonoPlanCasero(e.target.checked)} className="h-4 w-4 text-brand-lightblue focus:ring-brand-blue border-gray-300 rounded" />
-                        <label htmlFor="fonoPlanCasero" className="ml-2 block text-sm text-gray-900">Se dejó plan casero</label>
-                    </div>
+                <div className="flex flex-col md:flex-row gap-6">
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${fonoEgreso ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
+                            {fonoEgreso && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
+                        </div>
+                        <input type="checkbox" className="hidden" checked={fonoEgreso} onChange={e => setFonoEgreso(e.target.checked)} />
+                        <span className="text-sm text-gray-400">Egreso de Rehabilitación</span>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer group">
+                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${fonoPlanCasero ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
+                            {fonoPlanCasero && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
+                        </div>
+                        <input type="checkbox" className="hidden" checked={fonoPlanCasero} onChange={e => setFonoPlanCasero(e.target.checked)} />
+                        <span className="text-sm text-gray-400">Plan Casero Entregado</span>
+                    </label>
                 </div>
 
-                <div>
-                    <label htmlFor="fonoJustificacion" className="block text-sm font-medium text-gray-700 mb-1">Justificación de continuidad en rehabilitación</label>
-                    <textarea id="fonoJustificacion" rows={3} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue" placeholder="Explique por qué el paciente debe continuar con el plan..." value={fonoJustificacion} onChange={e => setFonoJustificacion(e.target.value)} />
-                </div>
-            </div>
+                <GlassTextArea
+                    label="Justificación de Continuidad"
+                    placeholder="Especifique objetivos..."
+                    value={fonoJustificacion}
+                    onChange={e => setFonoJustificacion(e.target.value)}
+                />
+            </GlassCard>
 
-            <div>
-                <label htmlFor="evolucionFono" className="block text-sm font-medium text-gray-700 mb-1">Evolución y Notas Adicionales</label>
-                <textarea id="evolucionFono" rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue" placeholder="Detalles de la sesión, ejercicios oromotores realizados y recomendaciones de alimentación." value={note} onChange={e => setNote(e.target.value)} />
-            </div>
+            <GlassTextArea
+                label="Evolución y Notas Adicionales"
+                placeholder="Detalles de la sesión..."
+                value={note}
+                onChange={e => setNote(e.target.value)}
+            />
         </div>
     );
 
+
     const renderGenericForm = () => (
-        <div>
-            <label htmlFor="novedades" className="block text-sm font-medium text-gray-700 mb-1">Novedades del paciente</label>
-            <textarea
-                id="novedades"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue"
-                rows={5}
-                placeholder="Escriba aquí las novedades del paciente..."
+        <div className="space-y-6 animate-fade-in">
+            <GlassTextArea
+                label="Evolución / Nota de Turno"
+                placeholder="Describa los hallazgos y novedades del turno..."
                 value={note}
                 onChange={e => setNote(e.target.value)}
                 required
@@ -666,52 +672,71 @@ const HandoverForm: React.FC = () => {
         </div>
     );
 
+    if (!selectedPatientId) {
+        return (
+            <div className="max-w-4xl mx-auto p-6 space-y-6 animate-fade-in">
+                <GlassCard className="!p-12 text-center flex flex-col items-center justify-center space-y-4">
+                    <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center border border-white/10 text-gray-500">
+                        <Icons.User size={32} />
+                    </div>
+                    <h3 className="text-xl font-outfit text-white">No se ha seleccionado paciente</h3>
+                    <p className="text-gray-400 max-w-xs">Seleccione un paciente de la lista para registrar una nueva novedad de turno.</p>
+                </GlassCard>
+            </div>
+        );
+    }
+
+    const currentPatient = acceptedPatients.find(p => p.id === selectedPatientId);
+
     return (
-        <div className="max-w-4xl mx-auto">
-            <h1 className="text-3xl font-bold text-gray-800 mb-6">Entrega de Turno / Novedades</h1>
-            <Card>
-                <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="max-w-4xl mx-auto p-4 md:p-6 space-y-6">
+            <GlassCard className="!p-8 overflow-hidden relative">
+                {/* Decorative background glow */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-[#00E5FF]/5 blur-[100px] -z-10" />
+
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                     <div>
-                        <label htmlFor="patient-select" className="block text-sm font-medium text-gray-700 mb-1">Seleccionar Paciente</label>
-                        <select
-                            id="patient-select"
-                            value={selectedPatientId}
-                            onChange={(e) => setSelectedPatientId(e.target.value)}
-                            className="w-full px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue"
-                            required
-                        >
-                            <option value="">-- Elija un paciente --</option>
-                            {acceptedPatients.map(p => <option key={p.id} value={p.id}>{p.nombreCompleto} (ID: {p.id})</option>)}
-                        </select>
+                        <h2 className="text-2xl font-outfit font-bold text-white flex items-center gap-3">
+                            <span className="p-2 rounded-xl bg-[#00E5FF]/10 text-[#00E5FF]">
+                                <Icons.Clipboard size={20} />
+                            </span>
+                            Novedad de Turno
+                        </h2>
+                        <p className="text-gray-400 text-sm mt-1">Registrando evolución para <span className="text-white font-medium">{currentPatient?.nombreCompleto || 'Paciente'}</span></p>
                     </div>
-
-                    <div className="space-y-4">
-                        <h3 className="font-semibold text-lg text-gray-700">Novedades para: <span className="text-brand-blue">{user?.cargo}</span></h3>
-
-                        {isMedico && renderMedicoForm()}
-                        {isJefeEnfermeria && renderJefeEnfermeriaForm()}
-                        {isAuxiliar && renderAuxiliarForm()}
-                        {isFisioterapeuta && renderFisioterapiaForm()}
-                        {isTerapeutaOcupacional && renderTerapiaOcupacionalForm()}
-                        {isFonoaudiologo && renderFonoaudiologiaForm()}
-
-                        {/* If none of the specific roles match, show generic form */}
-                        {!isMedico && !isJefeEnfermeria && !isAuxiliar && !isFisioterapeuta && !isTerapeutaOcupacional && !isFonoaudiologo && renderGenericForm()}
-
-                        {/* Common text area for Auxiliar (others have their own inside specific renders) */}
-                        {isAuxiliar && (
-                            <div>
-                                <label htmlFor="novedadesAux" className="block text-sm font-medium text-gray-700 mb-1">Novedades y/o Pendientes</label>
-                                <textarea id="novedadesAux" rows={4} className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-brand-lightblue focus:border-brand-lightblue" placeholder="Observaciones generales..." value={note} onChange={e => setNote(e.target.value)} />
-                            </div>
-                        )}
+                    <div className="px-4 py-1.5 rounded-full bg-white/5 border border-white/10 text-[10px] font-bold text-[#00E5FF] uppercase tracking-widest">
+                        {user?.cargo}
                     </div>
+                </div>
 
-                    <div className="pt-4 border-t">
-                        <Button type="submit" className="w-full md:w-auto" disabled={!selectedPatientId}>Registrar Novedad</Button>
+                <form onSubmit={handleSubmit} className="space-y-8">
+                    {user?.cargo === 'Medico' && renderMedicoForm()}
+                    {user?.cargo === 'JefeEnfermeria' && renderJefeEnfermeriaForm()}
+                    {user?.cargo === 'AuxiliarEnfermeria' && renderAuxiliarForm()}
+                    {user?.cargo === 'Fisioterapia' && renderFisioterapiaForm()}
+                    {user?.cargo === 'TerapiaOcupacional' && renderTerapiaOcupacionalForm()}
+                    {user?.cargo === 'Fonoaudiologia' && renderFonoaudiologiaForm()}
+                    {!['Medico', 'JefeEnfermeria', 'AuxiliarEnfermeria', 'Fisioterapia', 'TerapiaOcupacional', 'Fonoaudiologia'].includes(user?.cargo || '') && renderGenericForm()}
+
+                    <div className="flex items-center justify-end gap-4 pt-6 border-t border-white/5">
+                        <GlassButton type="submit" variant="primary" className="min-w-[160px]">
+                            Guardar Registro
+                        </GlassButton>
                     </div>
                 </form>
-            </Card>
+            </GlassCard>
+
+            <GlassCard className="!p-6 border-emerald-500/10">
+                <div className="flex items-center gap-3">
+                    <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-500">
+                        <Icons.AlertCircle size={18} />
+                    </div>
+                    <div>
+                        <h4 className="text-sm font-bold text-white uppercase tracking-wider">Recordatorio de Seguridad</h4>
+                        <p className="text-xs text-gray-400">Toda la información registrada debe ser verídica y corresponde a la atención brindada en el domicilio.</p>
+                    </div>
+                </div>
+            </GlassCard>
         </div>
     );
 };
