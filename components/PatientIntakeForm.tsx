@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Patient, AntibioticTreatment } from '../types.ts';
 import { useAppContext } from '../context/AppContext.tsx';
-import { GlassCard, GlassButton, GlassInput, GlassSelect } from './ui/GlassComponents.tsx';
+import { GlassCard, GlassButton, GlassInput, GlassSelect, GlassCheckbox } from './ui/GlassComponents.tsx';
 import { DOCUMENT_TYPES, CLINICAS_ORIGEN, PROGRAMAS, TERAPIAS_HOSPITALARIO, TERAPIAS_CRONICO, TERAPIAS_PALIATIVO, ANTIBIOTICOS, OXIGENO_DISPOSITIVOS, SONDA_TIPOS, GLUCOMETRIA_FRECUENCIAS, calculateAge, Icons } from '../constants.tsx';
 import { isPointInPolygon, geocodeAddress, COVERAGE_POLYGON } from '../utils/geolocation.ts';
 
@@ -195,40 +195,46 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
     const renderCoverageStatus = () => {
         switch (coverageStatus) {
             case 'loading':
-                return <div className="flex items-center gap-2 mt-2 p-2 bg-white/5 rounded-lg text-xs text-gray-400">
+                return <div className="flex items-center gap-2 mt-2 p-2 bg-white/5 rounded-lg text-xs text-gray-500 font-bold uppercase tracking-widest">
                     <svg className="animate-spin h-3 w-3 text-[#00E5FF]" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    Verificando coordenadas...
+                    Verificando coordenadas GPS...
                 </div>;
             case 'success':
-                return <div className="flex items-center gap-2 mt-2 p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg text-xs text-emerald-400 font-bold uppercase tracking-wider">
-                    {Icons.Plus} Cobertura Confirmada
+                return <div className="flex items-center gap-2 mt-2 p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-[10px] text-emerald-400 font-black uppercase tracking-[0.2em]">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]"></span>
+                    Localización Confirmada
                 </div>;
             case 'outside':
-                return <div className="mt-2 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
-                    <div className="flex items-center gap-2 text-xs font-bold text-red-400 uppercase tracking-widest">
-                        ⚠ Cobertura Externa
+                return <div className="mt-2 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl relative overflow-hidden group">
+                    <div className="flex items-center gap-2 text-[10px] font-black text-red-400 uppercase tracking-[0.2em] relative z-10">
+                        ⚠ Cobertura Externa Extramural
                     </div>
-                    <p className="mt-1 text-[10px] text-gray-500 leading-tight">El ingreso quedará sujeto a revisión administrativa.</p>
+                    <p className="mt-2 text-[10px] text-gray-500 font-bold leading-relaxed relative z-10">El ingreso requiere autorización administrativa especial por ubicación geográfica.</p>
                 </div>;
             case 'manual':
-                return <div className="flex items-center gap-2 mt-2 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg text-xs text-yellow-400 font-bold uppercase tracking-wider">
-                    Ingreso manual activado
+                return <div className="flex items-center gap-2 mt-2 p-2.5 bg-yellow-500/10 border border-yellow-500/20 rounded-xl text-[10px] text-yellow-400 font-black uppercase tracking-[0.2em]">
+                    Ingreso manual forzado
                 </div>;
             case 'error':
-                return <div className="mt-2 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
-                    <div className="flex items-center gap-2 text-xs font-bold text-yellow-400 uppercase tracking-widest">
-                        No se pudo verificar
+                return <div className="mt-2 p-4 bg-yellow-500/10 border border-yellow-500/20 rounded-2xl">
+                    <div className="flex items-center gap-2 text-[10px] font-black text-yellow-400 uppercase tracking-[0.2em]">
+                        Error de Geocodificación
                     </div>
-                    <button onClick={handleForceManual} type="button" className="mt-1 text-[10px] text-[#00E5FF] font-bold uppercase underline">Forzar Ingreso Manual</button>
+                    <button onClick={handleForceManual} type="button" className="mt-2 text-[10px] text-[#00E5FF] font-black uppercase tracking-widest underline decoration-2 underline-offset-4 hover:text-white transition-colors">Forzar Ingreso Manual</button>
                 </div>;
             default: return null;
         }
     };
 
     const ProgressBar = ({ currentStep }: { currentStep: number }) => (
-        <div className="flex gap-2 mb-8">
+        <div className="flex gap-3 mb-12">
             {[1, 2, 3].map(s => (
-                <div key={s} className={`h-1.5 flex-grow rounded-full transition-all duration-500 ${s <= currentStep ? 'bg-[#00E5FF] glow-cyan' : 'bg-white/10'}`} />
+                <div key={s} className="flex-grow space-y-2">
+                    <div className={`h-1.5 rounded-full transition-all duration-700 ${s <= currentStep ? 'bg-[#00E5FF] shadow-[0_0_15px_rgba(0,229,255,0.4)]' : 'bg-white/10'}`} />
+                    <span className={`text-[9px] font-black uppercase tracking-[0.2em] block ${s <= currentStep ? 'text-[#00E5FF]' : 'text-gray-600'}`}>
+                        Paso 0{s}
+                    </span>
+                </div>
             ))}
         </div>
     );
@@ -236,26 +242,34 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
     const renderStepOne = () => {
         const isNextDisabled = !['success', 'outside', 'manual'].includes(coverageStatus) || !programa;
         return (
-            <div className="space-y-6 animate-fade-in">
+            <div className="space-y-8 animate-fade-in">
                 <ProgressBar currentStep={1} />
-                <h3 className="text-xl font-bold text-white font-outfit uppercase tracking-tight">1. Identificación y Ubicación</h3>
+                <div className="space-y-1">
+                    <h3 className="text-2xl font-bold text-white font-outfit uppercase tracking-tight">Identificación y Ubicación</h3>
+                    <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Datos básicos del paciente y domicilio</p>
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <GlassSelect label="Tipo de Documento" options={DOCUMENT_TYPES} value={tipoDocumento} onChange={e => setTipoDocumento(e.target.value)} required disabled={isEditMode} />
                     <GlassInput label="Número de Documento" type="text" value={id} onChange={e => setId(e.target.value)} required disabled={isEditMode} />
                     <GlassInput label="Nombre Completo" type="text" value={nombreCompleto} onChange={e => setNombreCompleto(e.target.value)} required className="md:col-span-2" />
 
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                         <GlassInput label="Fecha de Nacimiento" type="date" value={fechaNacimiento} onChange={e => setFechaNacimiento(e.target.value)} required />
-                        <p className="text-[10px] font-bold text-[#00E5FF] uppercase tracking-widest ml-1">{calculateAge(fechaNacimiento)} años detectados</p>
+                        {fechaNacimiento && (
+                            <div className="inline-block px-3 py-1 bg-[#00E5FF]/10 rounded-lg border border-[#00E5FF]/20">
+                                <span className="text-[9px] font-black text-[#00E5FF] uppercase tracking-widest">{calculateAge(fechaNacimiento)} Años Detectados</span>
+                            </div>
+                        )}
                     </div>
 
-                    <GlassSelect label="Programa" options={PROGRAMAS} value={programa} onChange={e => setPrograma(e.target.value)} required />
+                    <GlassSelect label="Programa Extramural" options={PROGRAMAS} value={programa} onChange={e => setPrograma(e.target.value)} required />
 
-                    <div className="md:col-span-2">
-                        <div className="flex flex-col md:flex-row md:items-end gap-3">
+                    <div className="md:col-span-2 p-6 rounded-3xl bg-white/[0.03] border border-white/5 space-y-4">
+                        <div className="flex flex-col md:flex-row md:items-end gap-4">
                             <div className="flex-grow"><GlassInput label="Dirección de Residencia" type="text" value={direccion} onChange={e => setDireccion(e.target.value)} required /></div>
-                            <GlassButton type="button" variant="outline" onClick={handleVerifyCoverage} disabled={coverageStatus === 'loading' || !direccion} className="md:h-[50px]">
-                                {coverageStatus === 'loading' ? 'Verificando...' : 'Verificar'}
+                            <GlassButton type="button" variant="outline" onClick={handleVerifyCoverage} disabled={coverageStatus === 'loading' || !direccion} className="md:h-[52px] !px-8 uppercase tracking-widest font-black text-[10px]">
+                                {coverageStatus === 'loading' ? 'Procesando...' : 'Validar GPS'}
                             </GlassButton>
                         </div>
                         {renderCoverageStatus()}
@@ -266,137 +280,172 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
                     <GlassInput label="Cuidador Principal" type="text" value={cuidadorPrincipal} onChange={e => setCuidadorPrincipal(e.target.value)} required />
                     <GlassInput label="Teléfono Cuidador" type="tel" value={telefonoCuidador} onChange={e => setTelefonoCuidador(e.target.value)} required />
                 </div>
-                <div className="flex items-center justify-between pt-8 border-t border-white/5">
-                    <GlassButton type="button" variant="ghost" onClick={onClose}>Cancelar</GlassButton>
-                    <GlassButton glow onClick={() => setStep(2)} disabled={isNextDisabled}>Siguiente Paso</GlassButton>
+
+                <div className="flex items-center justify-between pt-10 border-t border-white/5">
+                    <GlassButton type="button" variant="ghost" onClick={onClose} className="uppercase tracking-widest font-black text-[10px]">Cerrar Formulario</GlassButton>
+                    <GlassButton glow onClick={() => setStep(2)} disabled={isNextDisabled} className="h-12 px-10 uppercase tracking-widest font-black text-[10px]">Siguiente Etapa</GlassButton>
                 </div>
             </div>
         );
     };
 
     const renderStepTwo = () => (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-8 animate-fade-in">
             <ProgressBar currentStep={2} />
-            <h3 className="text-xl font-bold text-white font-outfit uppercase tracking-tight">2. Resumen Clínico</h3>
-            <div className="grid grid-cols-1 gap-6">
-                <GlassSelect label="Clínica de Origen" options={CLINICAS_ORIGEN} value={clinicaEgreso} onChange={e => setClinicaEgreso(e.target.value)} required />
-                <GlassInput label="Diagnóstico CIE 10" type="text" value={diagnosticoEgreso} onChange={e => setDiagnosticoEgreso(e.target.value)} required />
-                <GlassInput label="Fecha Efectiva de Ingreso" type="date" value={fechaIngreso} onChange={e => setFechaIngreso(e.target.value)} required disabled={isEditMode} />
+            <div className="space-y-1">
+                <h3 className="text-2xl font-bold text-white font-outfit uppercase tracking-tight">Historial Clínico de Remisión</h3>
+                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Procedencia y diagnósticos base</p>
+            </div>
 
-                <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${alergicoMedicamentos ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
-                            {alergicoMedicamentos && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
-                        </div>
-                        <input type="checkbox" className="hidden" checked={alergicoMedicamentos} onChange={e => setAlergicoMedicamentos(e.target.checked)} />
-                        <span className="text-sm font-medium text-gray-300">¿Paciente alérgico a medicamentos?</span>
-                    </label>
+            <div className="grid grid-cols-1 gap-8">
+                <GlassSelect label="Institución Prestadora de Origen" options={CLINICAS_ORIGEN} value={clinicaEgreso} onChange={e => setClinicaEgreso(e.target.value)} required />
+                <GlassInput label="Diagnóstico Principal (CIE-10)" type="text" value={diagnosticoEgreso} onChange={e => setDiagnosticoEgreso(e.target.value)} required />
+                <GlassInput label="Fecha de Ingreso de Programa" type="date" value={fechaIngreso} onChange={e => setFechaIngreso(e.target.value)} required disabled={isEditMode} />
+
+                <div className="p-6 rounded-3xl bg-white/[0.03] border border-white/5 backdrop-blur-sm group">
+                    <GlassCheckbox
+                        label="¿Presenta Antecedentes Alérgicos?"
+                        checked={alergicoMedicamentos}
+                        onChange={e => setAlergicoMedicamentos(e.target.checked)}
+                    />
                     {alergicoMedicamentos && (
-                        <div className="mt-4 animate-slide-up">
-                            <GlassInput placeholder="Describa medicamentos y reacciones" value={alergiasInfo} onChange={e => setAlergiasInfo(e.target.value)} />
+                        <div className="mt-6 animate-slide-up bg-black/20 p-4 rounded-2xl border border-red-500/10">
+                            <GlassInput
+                                label="Especificación de Alergias"
+                                placeholder="Describa fármacos y reacciones adversas observadas..."
+                                value={alergiasInfo}
+                                onChange={e => setAlergiasInfo(e.target.value)}
+                            />
                         </div>
                     )}
                 </div>
             </div>
-            <div className="flex justify-between pt-8 border-t border-white/5">
-                <GlassButton variant="ghost" onClick={() => setStep(1)}>Atrás</GlassButton>
-                <GlassButton glow onClick={() => setStep(3)}>Configurar Terapias</GlassButton>
+
+            <div className="flex justify-between pt-10 border-t border-white/5">
+                <GlassButton variant="ghost" onClick={() => setStep(1)} className="uppercase tracking-widest font-black text-[10px]">Atrás</GlassButton>
+                <GlassButton glow onClick={() => setStep(3)} className="h-12 px-10 uppercase tracking-widest font-black text-[10px]">Configurar Plan de Cuidado</GlassButton>
             </div>
         </div>
     );
 
     const renderStepThree = () => (
-        <form onSubmit={handleSubmit} className="space-y-6 animate-fade-in">
+        <form onSubmit={handleSubmit} className="space-y-8 animate-fade-in relative">
             <ProgressBar currentStep={3} />
-            <h3 className="text-xl font-bold text-white font-outfit uppercase tracking-tight">3. Plan de Cuidados</h3>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-4 rounded-2xl bg-white/5 border border-white/10">
-                {Object.keys(terapias).map(terapia => (
-                    <label key={terapia} className="flex items-center gap-3 cursor-pointer group p-2 hover:bg-white/5 rounded-xl transition-colors">
-                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${terapias[terapia] ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
-                            {terapias[terapia] && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
-                        </div>
-                        <input type="checkbox" className="hidden" checked={!!terapias[terapia]} onChange={() => handleTherapyChange(terapia)} />
-                        <span className="text-xs font-medium text-gray-400 uppercase tracking-tight group-hover:text-white transition-colors">
-                            {terapia.replace(/ \(.+?\)/g, '')}
-                        </span>
-                    </label>
-                ))}
+            <div className="space-y-1">
+                <h3 className="text-2xl font-bold text-white font-outfit uppercase tracking-tight">Prescripción de Terapias</h3>
+                <p className="text-[10px] text-gray-500 font-black uppercase tracking-widest">Definición de servicios y parámetros médicos</p>
             </div>
 
-            <div className="space-y-6 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                {terapias['Oxígeno'] && (
-                    <GlassCard className="!bg-[#00E5FF]/5 border-[#00E5FF]/20">
-                        <h4 className="text-[10px] font-bold text-[#00E5FF] uppercase tracking-[0.2em] mb-4">Parámetros de Oxígeno</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                            <GlassSelect label="Dispositivo" options={OXIGENO_DISPOSITIVOS} value={oxigenoDispositivo} onChange={e => setOxigenoDispositivo(e.target.value)} required />
-                            <GlassInput label="Litraje (L/min)" type="number" value={oxigenoLitraje} onChange={e => setOxigenoLitraje(parseFloat(e.target.value))} required />
+            <GlassCard className="!bg-white/[0.02] !border-white/5 !p-6">
+                <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em] mb-6 px-2">Servicios Solicitados</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {Object.keys(terapias).map(terapia => (
+                        <div key={terapia} className="p-3 rounded-2xl bg-white/5 border border-white/5 hover:border-[#00E5FF]/30 transition-all group">
+                            <GlassCheckbox
+                                label={terapia.replace(/ \(.+?\)/g, '')}
+                                checked={!!terapias[terapia]}
+                                onChange={() => handleTherapyChange(terapia)}
+                            />
                         </div>
+                    ))}
+                </div>
+            </GlassCard>
+
+            <div className="space-y-8 max-h-[500px] overflow-y-auto pr-3 no-scrollbar custom-scrollbar">
+                {terapias['Oxígeno'] && (
+                    <GlassCard className="!bg-[#00E5FF]/5 !border-[#00E5FF]/20 !p-8 relative overflow-hidden group">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-1.5 h-6 bg-[#00E5FF] rounded-full shadow-[0_0_12px_rgba(0,229,255,0.4)]"></div>
+                            <h4 className="text-[10px] font-black text-[#00E5FF] uppercase tracking-[0.25em]">Soporte Ventilatorio (O2)</h4>
+                        </div>
+                        <div className="grid grid-cols-2 gap-6 relative z-10">
+                            <GlassSelect label="Dispositivo" options={OXIGENO_DISPOSITIVOS} value={oxigenoDispositivo} onChange={e => setOxigenoDispositivo(e.target.value)} required />
+                            <GlassInput label="Litraje (L/min)" type="number" step="0.5" value={oxigenoLitraje} onChange={e => setOxigenoLitraje(parseFloat(e.target.value))} required />
+                        </div>
+                        <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-[#00E5FF]/5 blur-3xl group-hover:bg-[#00E5FF]/10 transition-all"></div>
                     </GlassCard>
                 )}
 
                 {terapias['Aplicación de terapia antibiótica'] && (
-                    <GlassCard className="!bg-[#10B981]/5 border-[#10B981]/20">
-                        <h4 className="text-[10px] font-bold text-[#10B981] uppercase tracking-[0.2em] mb-4">Esquema Antibiótico</h4>
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <GlassCard className="!bg-purple-500/5 !border-purple-500/20 !p-8 relative overflow-hidden group">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-1.5 h-6 bg-purple-500 rounded-full shadow-[0_0_12px_rgba(168,85,247,0.4)]"></div>
+                            <h4 className="text-[10px] font-black text-purple-400 uppercase tracking-[0.25em]">Parametrización Antibiótica</h4>
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 relative z-10">
                             <GlassSelect label="Fármaco" options={ANTIBIOTICOS} value={antibiotico.medicamento} onChange={e => setAntibiotico(p => ({ ...p, medicamento: e.target.value }))} required />
-                            <div>
-                                <GlassInput label="Dosis (mg)" type="number" value={antibiotico.miligramos || ''} onChange={e => setAntibiotico(p => ({ ...p, miligramos: parseFloat(e.target.value) }))} required />
-                                {errors.miligramos && <p className="text-red-400 text-[10px] mt-1 font-bold">{errors.miligramos}</p>}
+                            <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                    <GlassInput label="Dosis (mg)" type="number" value={antibiotico.miligramos || ''} onChange={e => setAntibiotico(p => ({ ...p, miligramos: parseFloat(e.target.value) }))} required />
+                                    {errors.miligramos && <p className="text-red-400 text-[9px] mt-2 font-black uppercase tracking-widest">{errors.miligramos}</p>}
+                                </div>
+                                <div>
+                                    <GlassInput label="Frecuencia (Horas)" type="number" value={antibiotico.frecuenciaHours || ''} onChange={e => setAntibiotico(p => ({ ...p, frecuenciaHoras: parseInt(e.target.value) }))} required />
+                                    {errors.frecuenciaHoras && <p className="text-red-400 text-[9px] mt-2 font-black uppercase tracking-widest">{errors.frecuenciaHoras}</p>}
+                                </div>
                             </div>
-                            <div>
-                                <GlassInput label="Intervalo (Horas)" type="number" value={antibiotico.frecuenciaHoras || ''} onChange={e => setAntibiotico(p => ({ ...p, frecuenciaHoras: parseInt(e.target.value) }))} required />
-                                {errors.frecuenciaHoras && <p className="text-red-400 text-[10px] mt-1 font-bold">{errors.frecuenciaHoras}</p>}
-                            </div>
-                            <div className="md:col-span-2 grid grid-cols-2 gap-4">
-                                <GlassInput label="F. Inicio" type="date" value={antibiotico.fechaInicio || ''} onChange={e => setAntibiotico(p => ({ ...p, fechaInicio: e.target.value }))} required />
-                                <GlassInput label="F. Fin" type="date" value={antibiotico.fechaTerminacion || ''} onChange={e => setAntibiotico(p => ({ ...p, fechaTerminacion: e.target.value }))} required />
+                            <div className="md:col-span-2 grid grid-cols-2 gap-6">
+                                <GlassInput label="Fecha Inicio Tratamiento" type="date" value={antibiotico.fechaInicio || ''} onChange={e => setAntibiotico(p => ({ ...p, fechaInicio: e.target.value }))} required />
+                                <GlassInput label="Fecha Término Estimada" type="date" value={antibiotico.fechaTerminacion || ''} onChange={e => setAntibiotico(p => ({ ...p, fechaTerminacion: e.target.value }))} required />
                             </div>
                         </div>
+                        <div className="absolute -right-10 -bottom-10 w-32 h-32 bg-purple-500/5 blur-3xl group-hover:bg-purple-500/10 transition-all"></div>
                     </GlassCard>
                 )}
 
                 {terapias['Manejo de Sondas'] && (
-                    <GlassCard className="!bg-white/5 border-white/10">
-                        <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Gestión de Sondas</h4>
-                        <GlassSelect label="Tipo" options={SONDA_TIPOS} value={sondaInfo.tipo} onChange={e => setSondaInfo(p => ({ ...p, tipo: e.target.value }))} required />
+                    <GlassCard className="!bg-white/5 !border-white/10 !p-8 group hover:border-[#00E5FF]/30 transition-all">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-1.5 h-6 bg-gray-500 rounded-full group-hover:bg-[#00E5FF] transition-colors"></div>
+                            <h4 className="text-[10px] font-black text-gray-400 group-hover:text-white uppercase tracking-[0.25em]">Procedimientos de Sonda</h4>
+                        </div>
+                        <GlassSelect label="Tipo de Dispositivo" options={SONDA_TIPOS} value={sondaInfo.tipo} onChange={e => setSondaInfo(p => ({ ...p, tipo: e.target.value }))} required />
                     </GlassCard>
                 )}
 
                 {terapias['curación mayor en casa por enfermería'] && (
-                    <GlassCard className="!bg-white/5 border-white/10">
-                        <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Curaciones</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                            <GlassInput label="Tipo Herida" value={heridaInfo.tipo} onChange={e => setHeridaInfo(p => ({ ...p, tipo: e.target.value }))} required />
-                            <GlassInput label="Ubicación" value={heridaInfo.localizacion} onChange={e => setHeridaInfo(p => ({ ...p, localizacion: e.target.value }))} required />
+                    <GlassCard className="!bg-white/5 !border-white/10 !p-8 group hover:border-[#00E5FF]/30 transition-all">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-1.5 h-6 bg-gray-500 rounded-full group-hover:bg-[#00E5FF] transition-colors"></div>
+                            <h4 className="text-[10px] font-black text-gray-400 group-hover:text-white uppercase tracking-[0.25em]">Curación de Heridas</h4>
+                        </div>
+                        <div className="grid grid-cols-2 gap-6">
+                            <GlassInput label="Clasificación Herida" value={heridaInfo.tipo} onChange={e => setHeridaInfo(p => ({ ...p, tipo: e.target.value }))} required />
+                            <GlassInput label="Ubicación Anatómica" value={heridaInfo.localizacion} onChange={e => setHeridaInfo(p => ({ ...p, localizacion: e.target.value }))} required />
                         </div>
                     </GlassCard>
                 )}
 
                 {terapias['Toma de glucometrías'] && (
-                    <GlassCard className="!bg-white/5 border-white/10">
-                        <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Monitoreo Metabólico</h4>
-                        <GlassSelect label="Frecuencia" options={GLUCOMETRIA_FRECUENCIAS} value={glucometriaInfo.frecuencia} onChange={e => setGlucometriaInfo(p => ({ ...p, frecuencia: e.target.value }))} required />
+                    <GlassCard className="!bg-white/5 !border-white/10 !p-8 group hover:border-[#00E5FF]/30 transition-all">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-1.5 h-6 bg-gray-500 rounded-full group-hover:bg-[#00E5FF] transition-colors"></div>
+                            <h4 className="text-[10px] font-black text-gray-400 group-hover:text-white uppercase tracking-[0.25em]">Monitoreo Glucémico</h4>
+                        </div>
+                        <GlassSelect label="Frecuencia Institucional" options={GLUCOMETRIA_FRECUENCIAS} value={glucometriaInfo.frecuencia} onChange={e => setGlucometriaInfo(p => ({ ...p, frecuencia: e.target.value }))} required />
                     </GlassCard>
                 )}
 
                 {terapias['Otras terapias'] && (
-                    <GlassCard className="!bg-white/5 border-white/10">
-                        <h4 className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mb-4">Observaciones Adicionales</h4>
-                        <GlassInput label="Descripción" value={otrasTerapiasInfo} onChange={e => setOtrasTerapiasInfo(e.target.value)} required />
+                    <GlassCard className="!bg-white/5 !border-white/10 !p-8 group hover:border-[#00E5FF]/30 transition-all">
+                        <div className="flex items-center gap-3 mb-6">
+                            <div className="w-1.5 h-6 bg-gray-500 rounded-full group-hover:bg-[#00E5FF] transition-colors"></div>
+                            <h4 className="text-[10px] font-black text-gray-400 group-hover:text-white uppercase tracking-[0.25em]">Observaciones Especiales</h4>
+                        </div>
+                        <GlassInput label="Descripción del Requerimiento" value={otrasTerapiasInfo} onChange={e => setOtrasTerapiasInfo(e.target.value)} required />
                     </GlassCard>
                 )}
             </div>
 
-            <div className="flex justify-between pt-8 border-t border-white/5">
-                <GlassButton variant="ghost" onClick={() => setStep(2)}>Atrás</GlassButton>
-                <GlassButton glow type="submit">{isEditMode ? 'Actualizar Ficha' : 'Confirmar Ingreso'}</GlassButton>
+            <div className="flex justify-between pt-10 border-t border-white/5">
+                <GlassButton variant="ghost" onClick={() => setStep(2)} className="uppercase tracking-widest font-black text-[10px]">Atrás</GlassButton>
+                <GlassButton glow type="submit" className="h-12 px-12 uppercase tracking-widest font-black text-[10px]">{isEditMode ? 'Confirmar Actualización' : 'Someter Ingreso Administrativo'}</GlassButton>
             </div>
         </form>
     );
 
     return (
-        <div className="max-w-2xl mx-auto">
+        <div className="max-w-3xl mx-auto">
             {step === 1 && renderStepOne()}
             {step === 2 && renderStepTwo()}
             {step === 3 && renderStepThree()}

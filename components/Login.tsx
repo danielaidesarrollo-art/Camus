@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { GlassCard, GlassButton, GlassInput } from './ui/GlassComponents.tsx';
+import { Icons } from '../constants.tsx';
 import Register from './Register.tsx';
 
 const Login: React.FC = () => {
@@ -34,31 +35,40 @@ const Login: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-[#0B0E14] p-4 font-inter">
-            {/* Background decorative glows */}
-            <div className="absolute top-1/4 -left-20 w-80 h-80 bg-[#00E5FF] opacity-10 blur-[120px] rounded-full"></div>
-            <div className="absolute bottom-1/4 -right-20 w-80 h-80 bg-[#00E5FF] opacity-10 blur-[120px] rounded-full"></div>
+        <div className="min-h-screen flex items-center justify-center bg-[#0B0E14] p-4 font-inter relative overflow-hidden">
+            {/* Multi-layered background decorative glows */}
+            <div className="absolute top-1/4 -left-20 w-96 h-96 bg-[#00E5FF] opacity-[0.08] blur-[120px] rounded-full animate-pulse"></div>
+            <div className="absolute bottom-1/4 -right-20 w-96 h-96 bg-[#A855F7] opacity-[0.08] blur-[120px] rounded-full"></div>
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-[#00E5FF] opacity-[0.03] blur-[150px] pointer-events-none"></div>
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-[#00E5FF] opacity-[0.03] blur-[150px] pointer-events-none"></div>
 
-            <div className="w-full max-w-md space-y-8 relative z-10 animate-fade-in">
+            <div className="w-full max-w-md space-y-10 relative z-10 animate-fade-in-up">
                 <div className="flex flex-col items-center">
-                    <img
-                        src="/logo.jpg"
-                        alt="Camus Logo"
-                        className="w-32 h-32 rounded-full border-2 border-[#00E5FF]/30 glow-cyan mb-6 object-cover"
-                    />
-                    <h1 className="text-4xl font-bold text-white font-outfit text-glow">CAMUS</h1>
-                    <p className="mt-2 text-gray-400 font-medium uppercase tracking-widest text-sm">
-                        Gestión de Atención Extramural
+                    <div className="relative group">
+                        <div className="absolute -inset-1 bg-gradient-to-r from-[#00E5FF] to-[#A855F7] rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
+                        <img
+                            src="/logo.jpg"
+                            alt="Camus Logo"
+                            className="relative w-32 h-32 rounded-full border border-white/10 glow-cyan mb-6 object-cover shadow-2xl transition-transform duration-500 group-hover:scale-105"
+                        />
+                    </div>
+                    <h1 className="text-5xl font-bold text-white font-outfit text-glow tracking-tighter">CAMUS</h1>
+                    <div className="w-12 h-1 bg-gradient-to-r from-[#00E5FF] to-[#A855F7] rounded-full mt-4 mb-2"></div>
+                    <p className="text-gray-400 font-medium uppercase tracking-[0.3em] text-[10px]">
+                        Atención Extramural Inteligente
                     </p>
                 </div>
 
-                <GlassCard className="space-y-6">
-                    <div>
-                        <h2 className="text-xl font-semibold text-white mb-1">Bienvenido</h2>
-                        <p className="text-sm text-gray-400">Ingrese sus credenciales para continuar</p>
+                <GlassCard className="!p-10 border-white/5 relative overflow-hidden">
+                    {/* Interior decorative glow */}
+                    <div className="absolute -top-24 -right-24 w-48 h-48 bg-[#00E5FF]/5 blur-3xl pointer-events-none"></div>
+
+                    <div className="mb-8">
+                        <h2 className="text-2xl font-bold text-white mb-2">Bienvenido</h2>
+                        <p className="text-xs text-gray-500 font-medium leading-relaxed">Ingrese sus credenciales corporativas para acceder a la plataforma central.</p>
                     </div>
 
-                    <form className="space-y-5" onSubmit={handleLogin}>
+                    <form className="space-y-6" onSubmit={handleLogin}>
                         <GlassInput
                             label="Documento de Identidad"
                             type="text"
@@ -77,29 +87,38 @@ const Login: React.FC = () => {
                         />
 
                         {error && (
-                            <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
+                            <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold uppercase tracking-wider animate-shake">
+                                {Icons.AlertCircle && <span className="inline-block mr-2 align-middle">⚠️</span>}
                                 {error}
                             </div>
                         )}
 
-                        <GlassButton type="submit" className="w-full" glow>
+                        <GlassButton type="submit" className="w-full !py-4 text-sm uppercase tracking-widest font-black" glow>
                             Iniciar Sesión
                         </GlassButton>
                     </form>
 
-                    <div className="pt-4 text-center border-t border-white/5">
+                    <div className="pt-6 mt-8 text-center border-t border-white/5">
                         <button
                             onClick={() => setIsRegistering(true)}
-                            className="text-sm font-medium text-[#00E5FF] hover:text-[#00B8CC] transition-colors"
+                            className="text-[10px] font-bold text-[#00E5FF] hover:text-white transition-all uppercase tracking-widest flex items-center justify-center gap-2 group mx-auto"
                         >
-                            ¿Nuevo colaborador? Registre su cuenta
+                            ¿Nuevo colaborador?
+                            <span className="group-hover:translate-x-1 transition-transform">Registre su cuenta &rarr;</span>
                         </button>
                     </div>
                 </GlassCard>
 
-                <p className="text-center text-xs text-gray-500">
-                    &copy; 2026 Virrey Solís IPS. Todos los derechos reservados.
-                </p>
+                <div className="text-center space-y-2">
+                    <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em]">
+                        &copy; 2026 Virrey Solís IPS
+                    </p>
+                    <div className="flex justify-center gap-4">
+                        <div className="w-1 h-1 rounded-full bg-white/10"></div>
+                        <div className="w-1 h-1 rounded-full bg-white/10"></div>
+                        <div className="w-1 h-1 rounded-full bg-white/10"></div>
+                    </div>
+                </div>
             </div>
         </div>
     );

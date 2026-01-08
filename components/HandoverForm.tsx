@@ -2,8 +2,9 @@
 import React, { useState, useMemo } from 'react';
 import { useAppContext } from '../context/AppContext.tsx';
 import { HandoverNote } from '../types.ts';
-import { GlassCard, GlassButton, GlassInput, GlassSelect, GlassRadioGroup, GlassTextArea } from './ui/GlassComponents.tsx';
-import { GUIA_INFUSION_ANTIBIOTICOS, ANTIBIOTICOS, OXIGENO_DISPOSITIVOS, Icons } from '../constants.tsx';
+import { GlassCard, GlassButton, GlassInput, GlassSelect, GlassRadioGroup, GlassTextArea, GlassCheckbox } from './ui/GlassComponents.tsx';
+import { GUIA_INFUSION_ANTIBIOTICOS, ANTIBIOTICOS, OXIGENO_DISPOSITIVOS, Icons, ROLES_ASISTENCIALES } from '../constants.tsx';
+import { aiService } from '../utils/aiService.ts';
 
 // --- Constants based on the Google Form ---
 const VITAL_SIGNS_OPTIONS = ["Tomado y Registrado en Historia Clinica", "No se toma por orden médica", "Paciente no permite la toma"];
@@ -130,13 +131,46 @@ const HandoverForm: React.FC = () => {
 
     const userCargo = user?.cargo || '';
 
-    // Role Detection
-    const isMedico = userCargo === 'MEDICO DOMICILIARIO';
-    const isJefeEnfermeria = userCargo === 'ENFERMERO(A) JEFE PAD ADMINISTRATIVO' || userCargo === 'ENFERMERO(A) JEFE PAD';
-    const isAuxiliar = userCargo.includes('AUXILIAR DE ENFERMERÍA') || userCargo.includes('AUXILIAR DE ENFERMERIA');
+    // Role Detection - Updated to be more robust based on ROLES_ASISTENCIALES
+    const isMedico = userCargo === 'MEDICO DOMICILIARIO' || userCargo === 'JEFE MEDICO';
+    const isJefeEnfermeria = userCargo.includes('ENFERMERO(A) JEFE');
+    const isAuxiliar = userCargo.includes('AUXILIAR DE ENFERMERIA');
     const isFisioterapeuta = userCargo.includes('FISIOTERAPEUTA');
     const isTerapeutaOcupacional = userCargo.includes('TERAPEUTA OCUPACIONAL');
     const isFonoaudiologo = userCargo.includes('FONOAUDIOLOGO');
+
+    // AI Assistant State
+    const [aiClinicalResponse, setAiClinicalResponse] = useState('');
+    const [isAiLoading, setIsAiLoading] = useState(false);
+
+    const handleClinicalAnalysis = async () => {
+        if (!selectedPatientId) return;
+        setIsAiLoading(true);
+        setAiClinicalResponse('');
+
+        try {
+            const currentPatient = acceptedPatients.find(p => p.id === selectedPatientId);
+            const context = `
+                Paciente: ${currentPatient?.nombreCompleto}
+                Edad: ${currentPatient?.fechaNacimiento}
+                Programa: ${currentPatient?.programa}
+                Estado Actual: ${currentPatient?.estado}
+                Nota de Turno Actual: ${note}
+                Signos Vitales: ${JSON.stringify(signosVitales)}
+            `;
+
+            const response = await aiService.runClinicalInference(
+                "Analiza la condición actual del paciente y la nota de evolución. Proporciona sugerencias clínicas o alertas si es necesario.",
+                context
+            );
+
+            setAiClinicalResponse(response.text || response.error || "No se pudo obtener análisis clínico.");
+        } catch (error) {
+            setAiClinicalResponse("Error al procesar el análisis clínico.");
+        } finally {
+            setIsAiLoading(false);
+        }
+    };
 
     const resetForms = () => {
         setSelectedPatientId('');
@@ -391,18 +425,18 @@ const HandoverForm: React.FC = () => {
         <div className="space-y-6 animate-fade-in">
             <GlassInput label="Accesos Venosos (Punciones/Cambios)" value={ivAccessInfo} onChange={e => setIvAccessInfo(e.target.value)} />
             <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">Escala de Flebitis (0-4)</label>
-                <select
-                    value={phlebitisScale}
+                <GlassSelect
+                    label="Escala de Flebitis"
+                    options={[
+                        { value: '0', label: '0 - Sin síntomas' },
+                        { value: '1', label: '1 - Eritema' },
+                        { value: '2', label: '2 - Dolor, eritema, edema' },
+                        { value: '3', label: '3 - Induración, cordón palpable' },
+                        { value: '4', label: '4 - Cordón palpable > 2.5 cm, purulencia' }
+                    ]}
+                    value={phlebitisScale.toString()}
                     onChange={e => setPhlebitisScale(Number(e.target.value))}
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00E5FF] focus:ring-1 focus:ring-[#00E5FF] transition-all appearance-none cursor-pointer"
-                >
-                    <option value={0} className="bg-[#0B0E14]">0 - Sin síntomas</option>
-                    <option value={1} className="bg-[#0B0E14]">1 - Eritema</option>
-                    <option value={2} className="bg-[#0B0E14]">2 - Dolor, eritema, edema</option>
-                    <option value={3} className="bg-[#0B0E14]">3 - Induración, cordón palpable</option>
-                    <option value={4} className="bg-[#0B0E14]">4 - Cordón palpable &gt; 2.5 cm, purulencia</option>
-                </select>
+                />
             </div>
             <GlassInput label="Úlceras por Presión / Estado" value={pressureUlcersInfo} onChange={e => setPressureUlcersInfo(e.target.value)} />
         </div>
@@ -504,20 +538,16 @@ const HandoverForm: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-6">
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${fisioEgreso ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
-                            {fisioEgreso && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
-                        </div>
-                        <input type="checkbox" className="hidden" checked={fisioEgreso} onChange={e => setFisioEgreso(e.target.checked)} />
-                        <span className="text-sm text-gray-400">Egreso de Rehabilitación</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${fisioPlanCasero ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
-                            {fisioPlanCasero && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
-                        </div>
-                        <input type="checkbox" className="hidden" checked={fisioPlanCasero} onChange={e => setFisioPlanCasero(e.target.checked)} />
-                        <span className="text-sm text-gray-400">Plan Casero Entregado</span>
-                    </label>
+                    <GlassCheckbox
+                        label="Egreso de Rehabilitación"
+                        checked={fisioEgreso}
+                        onChange={e => setFisioEgreso(e.target.checked)}
+                    />
+                    <GlassCheckbox
+                        label="Plan Casero Entregado"
+                        checked={fisioPlanCasero}
+                        onChange={e => setFisioPlanCasero(e.target.checked)}
+                    />
                 </div>
 
                 <GlassTextArea
@@ -565,20 +595,16 @@ const HandoverForm: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-6">
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${toEgreso ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
-                            {toEgreso && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
-                        </div>
-                        <input type="checkbox" className="hidden" checked={toEgreso} onChange={e => setToEgreso(e.target.checked)} />
-                        <span className="text-sm text-gray-400">Egreso de Rehabilitación</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${toPlanCasero ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
-                            {toPlanCasero && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
-                        </div>
-                        <input type="checkbox" className="hidden" checked={toPlanCasero} onChange={e => setToPlanCasero(e.target.checked)} />
-                        <span className="text-sm text-gray-400">Plan Casero Entregado</span>
-                    </label>
+                    <GlassCheckbox
+                        label="Egreso de Rehabilitación"
+                        checked={toEgreso}
+                        onChange={e => setToEgreso(e.target.checked)}
+                    />
+                    <GlassCheckbox
+                        label="Plan Casero Entregado"
+                        checked={toPlanCasero}
+                        onChange={e => setToPlanCasero(e.target.checked)}
+                    />
                 </div>
 
                 <GlassTextArea
@@ -626,20 +652,16 @@ const HandoverForm: React.FC = () => {
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-6">
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${fonoEgreso ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
-                            {fonoEgreso && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
-                        </div>
-                        <input type="checkbox" className="hidden" checked={fonoEgreso} onChange={e => setFonoEgreso(e.target.checked)} />
-                        <span className="text-sm text-gray-400">Egreso de Rehabilitación</span>
-                    </label>
-                    <label className="flex items-center gap-3 cursor-pointer group">
-                        <div className={`w-5 h-5 rounded border-2 transition-all flex items-center justify-center ${fonoPlanCasero ? 'bg-[#00E5FF] border-[#00E5FF]' : 'border-white/20 group-hover:border-white/40'}`}>
-                            {fonoPlanCasero && <span className="text-[#0B0E14] text-xs font-bold">✓</span>}
-                        </div>
-                        <input type="checkbox" className="hidden" checked={fonoPlanCasero} onChange={e => setFonoPlanCasero(e.target.checked)} />
-                        <span className="text-sm text-gray-400">Plan Casero Entregado</span>
-                    </label>
+                    <GlassCheckbox
+                        label="Egreso de Rehabilitación"
+                        checked={fonoEgreso}
+                        onChange={e => setFonoEgreso(e.target.checked)}
+                    />
+                    <GlassCheckbox
+                        label="Plan Casero Entregado"
+                        checked={fonoPlanCasero}
+                        onChange={e => setFonoPlanCasero(e.target.checked)}
+                    />
                 </div>
 
                 <GlassTextArea
@@ -710,13 +732,40 @@ const HandoverForm: React.FC = () => {
                 </div>
 
                 <form onSubmit={handleSubmit} className="space-y-8">
-                    {user?.cargo === 'Medico' && renderMedicoForm()}
-                    {user?.cargo === 'JefeEnfermeria' && renderJefeEnfermeriaForm()}
-                    {user?.cargo === 'AuxiliarEnfermeria' && renderAuxiliarForm()}
-                    {user?.cargo === 'Fisioterapia' && renderFisioterapiaForm()}
-                    {user?.cargo === 'TerapiaOcupacional' && renderTerapiaOcupacionalForm()}
-                    {user?.cargo === 'Fonoaudiologia' && renderFonoaudiologiaForm()}
-                    {!['Medico', 'JefeEnfermeria', 'AuxiliarEnfermeria', 'Fisioterapia', 'TerapiaOcupacional', 'Fonoaudiologia'].includes(user?.cargo || '') && renderGenericForm()}
+                    {isMedico && renderMedicoForm()}
+                    {isJefeEnfermeria && renderJefeEnfermeriaForm()}
+                    {isAuxiliar && renderAuxiliarForm()}
+                    {isFisioterapeuta && renderFisioterapiaForm()}
+                    {isTerapeutaOcupacional && renderTerapiaOcupacionalForm()}
+                    {isFonoaudiologo && renderFonoaudiologiaForm()}
+                    {!isMedico && !isJefeEnfermeria && !isAuxiliar && !isFisioterapeuta && !isTerapeutaOcupacional && !isFonoaudiologo && renderGenericForm()}
+
+                    <div className="mt-8 pt-8 border-t border-white/5 space-y-4">
+                        <div className="flex items-center justify-between">
+                            <h4 className="text-sm font-bold text-[#A855F7] flex items-center gap-2 uppercase tracking-wider">
+                                <span className="p-1.5 rounded-lg bg-[#A855F7]/10">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v15a2.5 2.5 0 0 1-4.96.44 2.5 2.5 0 0 1-2.96-3.08 3 3 0 0 1-.34-5.58 2.5 2.5 0 0 1 1.32-4.24 2.5 2.5 0 0 1 4.44-2.04Z" /><path d="M14.5 2A2.5 2.5 0 0 0 12 4.5v15a2.5 2.5 0 0 0 4.96.44 2.5 2.5 0 0 0 2.96-3.08 3 3 0 0 0 .34-5.58 2.5 2.5 0 0 0-1.32-4.24 2.5 2.5 0 0 0-4.44-2.04Z" /></svg>
+                                </span>
+                                Asistente Clínico (Med-Gemma)
+                            </h4>
+                            <GlassButton
+                                type="button"
+                                variant="secondary"
+                                size="sm"
+                                className="!py-1.5"
+                                onClick={handleClinicalAnalysis}
+                                disabled={isAiLoading}
+                            >
+                                {isAiLoading ? 'Analizando...' : 'Solicitar Análisis Clínico'}
+                            </GlassButton>
+                        </div>
+
+                        {aiClinicalResponse && (
+                            <div className="p-4 rounded-xl bg-[#A855F7]/5 border border-[#A855F7]/20 text-sm animate-fade-in">
+                                <p className="text-gray-300 leading-relaxed font-light whitespace-pre-wrap">{aiClinicalResponse}</p>
+                            </div>
+                        )}
+                    </div>
 
                     <div className="flex items-center justify-end gap-4 pt-6 border-t border-white/5">
                         <GlassButton type="submit" variant="primary" className="min-w-[160px]">

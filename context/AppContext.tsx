@@ -1,69 +1,96 @@
 
 
-import React, { createContext, useContext, ReactNode, useState, useEffect } from 'react';
+import React, { createContext, useContext, ReactNode, useState, useEffect, useRef } from 'react';
 import { User, Patient, HandoverNote } from '../types.ts';
 import { useAuth } from '../hooks/useAuth.tsx';
 import { usePatients } from '../hooks/usePatients.tsx';
 import { useHandover } from '../hooks/useHandover.tsx';
 
-const DATA_VERSION = '5.0'; // Updated to force data refresh
+const DATA_VERSION = '5.1';
+const SYNC_INTERVAL = 30000; // Sync every 30 seconds
 
 interface AppContextType {
-  user: User | null;
-  users: User[];
-  patients: Patient[];
-  handoverNotes: HandoverNote[];
-  isLoading: boolean;
-  error: string | null;
-  login: (user: User) => void;
-  logout: () => void;
-  updateUserInContext: (user: User) => void;
-  addUser: (user: User) => void;
-  updateUserInList: (user: User) => void;
-  removeUser: (documento: string) => void;
-  addPatient: (patient: Patient) => void;
-  updatePatient: (patient: Patient) => void;
-  addHandoverNote: (note: HandoverNote) => void;
+    user: User | null;
+    users: User[];
+    patients: Patient[];
+    handoverNotes: HandoverNote[];
+    isLoading: boolean;
+    isSyncing: boolean;
+    error: string | null;
+    login: (documento: string, password: string) => Promise<User>;
+    logout: () => void;
+    updateUserInContext: (user: User) => void;
+    addUser: (user: User) => void;
+    updateUserInList: (user: User) => void;
+    removeUser: (documento: string) => void;
+    addPatient: (patient: Patient) => void;
+    updatePatient: (patient: Patient) => void;
+    addHandoverNote: (note: HandoverNote) => void;
+    syncData: () => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
-interface AppProviderProps {
-    children: ReactNode;
-}
-
-export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
+export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
+    const [isSyncing, setIsSyncing] = useState(false);
     const [error, setError] = useState<string | null>(null);
-
-    // This effect handles data versioning and one-time setup checks.
-    useEffect(() => {
-        try {
-            const storedVersion = localStorage.getItem('dataVersion');
-            if (storedVersion !== DATA_VERSION) {
-                console.warn(`Data version mismatch (found: ${storedVersion}, expected: ${DATA_VERSION}). Resetting application data.`);
-                // Clear specific items to ensure a clean slate for the new structure
-                localStorage.removeItem('users');
-                localStorage.removeItem('authUser');
-                localStorage.removeItem('patients');
-                localStorage.removeItem('handoverNotes');
-                localStorage.setItem('dataVersion', DATA_VERSION);
-            }
-        } catch (e) {
-             console.error("Failed to check data version", e);
-             setError("No se pudo verificar la versión de los datos. La aplicación puede no funcionar correctamente.");
-        } finally {
-            // Data is ready to be loaded by hooks
-            setIsLoading(false);
-        }
-    }, []);
+    const syncTimerRef = useRef<NodeJS.Timeout | null>(null);
 
     const auth = useAuth();
     const patients = usePatients();
     const handover = useHandover();
 
+    // Data versioning & Initial Load
+    useEffect(() => {
+        const init = async () => {
+            try {
+                const storedVersion = localStorage.getItem('dataVersion');
+                if (storedVersion !== DATA_VERSION) {
+                    localStorage.clear();
+                    localStorage.setItem('dataVersion', DATA_VERSION);
+                }
+                // Initial sync
+                await syncData();
+            } finally {
+                setIsLoading(false);
+            }
+        };
+        init();
+    }, []);
+
+    // Real-time Polling Mechanism
+    useEffect(() => {
+        if (auth.user) {
+            syncTimerRef.current = setInterval(() => {
+                syncData();
+            }, SYNC_INTERVAL);
+        } else {
+            if (syncTimerRef.current) clearInterval(syncTimerRef.current);
+        }
+        return () => {
+            if (syncTimerRef.current) clearInterval(syncTimerRef.current);
+        };
+    }, [auth.user]);
+
+    const syncData = async () => {
+        if (isSyncing) return;
+        setIsSyncing(true);
+        try {
+            await Promise.all([
+                patients.refreshPatients(),
+                handover.refreshHandoverNotes()
+            ]);
+        } catch (e) {
+            console.error("Sync failed", e);
+        } finally {
+            setIsSyncing(false);
+        }
+    };
+
     const value: AppContextType = {
         isLoading,
+        isSyncing,
         error,
         user: auth.user,
         users: auth.users,
@@ -78,6 +105,7 @@ export const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         addPatient: patients.addPatient,
         updatePatient: patients.updatePatient,
         addHandoverNote: handover.addHandoverNote,
+        syncData
     };
 
     return (
