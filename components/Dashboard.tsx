@@ -10,12 +10,13 @@ import MapView from './MapView.tsx';
 import RoutePlanner from './RoutePlanner.tsx';
 import StaffManagement from './StaffManagement.tsx';
 import ProductionOrderView from './ProductionOrderView.tsx';
+import PersonnelPlanner from './PersonnelPlanner.tsx';
 
 const Dashboard: React.FC = () => {
     const [activeView, setActiveView] = useState('dashboard');
 
     useEffect(() => {
-        const validViews = ['dashboard', 'handover', 'schedule', 'profile', 'map', 'routes', 'staff', 'production'];
+        const validViews = ['dashboard', 'handover', 'schedule', 'profile', 'map', 'routes', 'staff', 'production', 'personnel'];
         if (!validViews.includes(activeView)) {
             setActiveView('dashboard');
         }
@@ -39,6 +40,8 @@ const Dashboard: React.FC = () => {
                 return <ProfileView />;
             case 'staff':
                 return <StaffManagement />;
+            case 'personnel':
+                return <PersonnelPlanner />;
             default:
                 return <PatientList />;
         }

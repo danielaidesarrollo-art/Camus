@@ -50,7 +50,10 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, activeView }) => {
                         <NavItem icon={Icons.Map} label="Mapa" isActive={activeView === 'map'} onClick={() => onNavigate('map')} />
                         <NavItem icon={Icons.Route} label="Rutas" isActive={activeView === 'routes'} onClick={() => onNavigate('routes')} />
                         {isChiefOrCoord && (
-                            <NavItem icon={Icons.ClipboardCheck} label="Prod." isActive={activeView === 'production'} onClick={() => onNavigate('production')} />
+                            <>
+                                <NavItem icon={Icons.ClipboardCheck} label="Prod." isActive={activeView === 'production'} onClick={() => onNavigate('production')} />
+                                <NavItem icon={Icons.Users} label="Planeación" isActive={activeView === 'personnel'} onClick={() => onNavigate('personnel')} />
+                            </>
                         )}
                         <NavItem icon={Icons.Profile} label="Perfil" isActive={activeView === 'profile'} onClick={() => onNavigate('profile')} />
                     </div>
