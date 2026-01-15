@@ -1,0 +1,51 @@
+steps:
+  # 1. Build the container image using production Dockerfile
+  - name: 'gcr.io/cloud-builders/docker'
+    args: 
+      - 'build'
+      - '-f'
+      - 'Dockerfile.production'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/camus-frontend:$SHORT_SHA'
+      - '-t'
+      - 'gcr.io/$PROJECT_ID/camus-frontend:latest'
+      - '.'
+
+  # 2. Push the images to Container Registry
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['push', '--all-tags', 'gcr.io/$PROJECT_ID/camus-frontend']
+
+  # 3. Deploy to Cloud Run
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: gcloud
+    args:
+      - 'run'
+      - 'deploy'
+      - 'camus-frontend'
+      - '--image'
+      - 'gcr.io/$PROJECT_ID/camus-frontend:$SHORT_SHA'
+      - '--region'
+      - 'us-central1'
+      - '--platform'
+      - 'managed'
+      - '--allow-unauthenticated'
+      - '--port'
+      - '8080'
+      - '--memory'
+      - '512Mi'
+      - '--cpu'
+      - '1'
+      - '--max-instances'
+      - '10'
+      - '--min-instances'
+      - '0'
+      - '--timeout'
+      - '300'
+
+images:
+  - 'gcr.io/$PROJECT_ID/camus-frontend:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/camus-frontend:latest'
+
+options:
+  machineType: 'N1_HIGHCPU_8'
+  logging: CLOUD_LOGGING_ONLY
