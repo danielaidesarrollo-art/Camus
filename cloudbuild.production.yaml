@@ -6,7 +6,7 @@ steps:
       - '-f'
       - 'Dockerfile.production'
       - '-t'
-      - 'gcr.io/$PROJECT_ID/camus-frontend:$SHORT_SHA'
+      - 'gcr.io/$PROJECT_ID/camus-frontend:$BUILD_ID'
       - '-t'
       - 'gcr.io/$PROJECT_ID/camus-frontend:latest'
       - '.'
@@ -23,7 +23,7 @@ steps:
       - 'deploy'
       - 'camus-frontend'
       - '--image'
-      - 'gcr.io/$PROJECT_ID/camus-frontend:$SHORT_SHA'
+      - 'gcr.io/$PROJECT_ID/camus-frontend:$BUILD_ID'
       - '--region'
       - 'us-central1'
       - '--platform'
@@ -43,7 +43,7 @@ steps:
       - '300'
 
 images:
-  - 'gcr.io/$PROJECT_ID/camus-frontend:$SHORT_SHA'
+  - 'gcr.io/$PROJECT_ID/camus-frontend:$BUILD_ID'
   - 'gcr.io/$PROJECT_ID/camus-frontend:latest'
 
 options:
