@@ -1,25 +1,46 @@
 <!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Camus - Gestión de Atención Extramural</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="/index.css">
-    
-    <!-- Global React scripts removed to avoid conflict with bundled React 19 -->
 
-    <!-- 2. Process Shim -->
-    <script>
-      window.process = window.process || {};
-      window.process.env = window.process.env || {};
-      if (!window.process.env.NODE_ENV) {
-        window.process.env.NODE_ENV = 'development';
-      }
-    </script>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+  <title>Camus - Gestión de Atención Extramural</title>
+  <meta name="description" content="Sistema integral de gestión de atención médica domiciliaria - Camus Extramural" />
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json" />
+
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#00E5FF" />
+  <meta name="msapplication-TileColor" content="#0B0E14" />
+
+  <!-- Apple iOS -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Camus" />
+  <link rel="apple-touch-icon" href="/logo-camus.jpg" />
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/jpeg" href="/logo-camus.jpg" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="/index.css">
+
+  <!-- Global React scripts removed to avoid conflict with bundled React 19 -->
+
+  <!-- 2. Process Shim -->
+  <script>
+    window.process = window.process || {};
+    window.process.env = window.process.env || {};
+    if (!window.process.env.NODE_ENV) {
+      window.process.env.NODE_ENV = 'development';
+    }
+  </script>
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+
 </html>

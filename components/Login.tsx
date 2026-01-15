@@ -65,7 +65,7 @@ const Login: React.FC = () => {
 
                     <div className="mb-8">
                         <h2 className="text-2xl font-bold text-white mb-2">Bienvenido</h2>
-                        <p className="text-xs text-gray-500 font-medium leading-relaxed">Ingrese sus credenciales corporativas para acceder a la plataforma central.</p>
+                        <p className="text-xs text-gray-500 font-medium leading-relaxed">Ingrese sus credenciales para acceder a la plataforma.</p>
                     </div>
 
                     <form className="space-y-6" onSubmit={handleLogin}>
@@ -103,8 +103,8 @@ const Login: React.FC = () => {
                             onClick={() => setIsRegistering(true)}
                             className="text-[10px] font-bold text-[#00E5FF] hover:text-white transition-all uppercase tracking-widest flex items-center justify-center gap-2 group mx-auto"
                         >
-                            ¿Nuevo colaborador?
-                            <span className="group-hover:translate-x-1 transition-transform">Registre su cuenta &rarr;</span>
+                            Nuevo registro?
+                            <span className="group-hover:translate-x-1 transition-transform">Ingrese aquí &rarr;</span>
                         </button>
                     </div>
                 </GlassCard>

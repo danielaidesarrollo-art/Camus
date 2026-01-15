@@ -1,6 +1,7 @@
 import React from 'react';
 import Login from './components/Login.tsx';
 import Dashboard from './components/Dashboard.tsx';
+import InstallPrompt from './components/InstallPrompt.tsx';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
 
 const AppContent: React.FC = () => {
@@ -35,7 +36,12 @@ const AppContent: React.FC = () => {
         );
     }
 
-    return !user ? <Login /> : <Dashboard />;
+    return (
+        <>
+            {!user ? <Login /> : <Dashboard />}
+            <InstallPrompt />
+        </>
+    );
 };
 
 const App: React.FC = () => {

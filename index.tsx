@@ -6,7 +6,7 @@ import ErrorBoundary from './components/ErrorBoundary.tsx';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
-  throw new Error("Could not find root element to mount to");
+    throw new Error("Could not find root element to mount to");
 }
 
 const ErrorFallback = ({ error }: { error: Error | null }) => {
@@ -40,9 +40,28 @@ const ErrorFallback = ({ error }: { error: Error | null }) => {
 // Fix: Use the new React 18 root API. 'ReactDOM.render' is deprecated and can cause typing issues with newer versions of @types/react.
 const root = ReactDOM.createRoot(rootElement);
 root.render(
-  <React.StrictMode>
-    <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <App />
-    </ErrorBoundary>
-  </React.StrictMode>
+    <React.StrictMode>
+        <ErrorBoundary FallbackComponent={ErrorFallback}>
+            <App />
+        </ErrorBoundary>
+    </React.StrictMode>
 );
+
+// Register Service Worker for PWA
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker
+            .register('/sw.js')
+            .then((registration) => {
+                console.log('[SW] Service Worker registered successfully:', registration.scope);
+
+                // Check for updates periodically
+                setInterval(() => {
+                    registration.update();
+                }, 60000); // Check every minute
+            })
+            .catch((error) => {
+                console.error('[SW] Service Worker registration failed:', error);
+            });
+    });
+}

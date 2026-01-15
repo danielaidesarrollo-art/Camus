@@ -5,6 +5,7 @@ import { User, Patient, HandoverNote } from '../types.ts';
 import { useAuth } from '../hooks/useAuth.tsx';
 import { usePatients } from '../hooks/usePatients.tsx';
 import { useHandover } from '../hooks/useHandover.tsx';
+import { safeCore } from '../utils/SafeCoreSDK.ts';
 
 const DATA_VERSION = '5.1';
 const SYNC_INTERVAL = 30000; // Sync every 30 seconds
@@ -77,6 +78,10 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         if (isSyncing) return;
         setIsSyncing(true);
         try {
+            // Secure ecosystem headers simulation (Sirius compliance)
+            const headers = safeCore.getEcosystemHeaders();
+            console.log("[AppContext] Syncing with Ecosystem:", headers['X-DanielAI-Station']);
+
             await Promise.all([
                 patients.refreshPatients(),
                 handover.refreshHandoverNotes()

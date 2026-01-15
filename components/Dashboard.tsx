@@ -1,5 +1,4 @@
 
-
 import React, { useState, useEffect } from 'react';
 import Navbar from './Navbar.tsx';
 import PatientList from './PatientList.tsx';
@@ -11,21 +10,49 @@ import RoutePlanner from './RoutePlanner.tsx';
 import StaffManagement from './StaffManagement.tsx';
 import ProductionOrderView from './ProductionOrderView.tsx';
 import PersonnelPlanner from './PersonnelPlanner.tsx';
+import PatientPortal from './PatientPortal.tsx';
+import { useAppContext } from '../context/AppContext.tsx';
+import { canAccessView, View, isPatient } from '../utils/permissions.ts';
 
 const Dashboard: React.FC = () => {
+    const { user } = useAppContext();
     const [activeView, setActiveView] = useState('dashboard');
 
+    // Redirect patients to their portal
     useEffect(() => {
-        const validViews = ['dashboard', 'handover', 'schedule', 'profile', 'map', 'routes', 'staff', 'production', 'personnel'];
+        if (user && isPatient(user)) {
+            setActiveView('patient_portal');
+        }
+    }, [user]);
+
+    useEffect(() => {
+        const validViews = ['dashboard', 'patient_portal', 'handover', 'schedule', 'profile', 'map', 'routes', 'staff', 'production', 'personnel'];
         if (!validViews.includes(activeView)) {
             setActiveView('dashboard');
         }
-    }, [activeView]);
+
+        // Check if user has permission to access this view
+        if (user && !canAccessView(user, activeView as View)) {
+            // Redirect to appropriate default view
+            if (isPatient(user)) {
+                setActiveView('patient_portal');
+            } else {
+                setActiveView('dashboard');
+            }
+        }
+    }, [activeView, user]);
 
     const renderView = () => {
+        // Patients always see their portal
+        if (user && isPatient(user)) {
+            return <PatientPortal />;
+        }
+
         switch (activeView) {
             case 'dashboard':
                 return <PatientList />;
+            case 'patient_portal':
+                return <PatientPortal />;
             case 'handover':
                 return <HandoverForm />;
             case 'schedule':

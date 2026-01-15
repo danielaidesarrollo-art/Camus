@@ -11,6 +11,9 @@ export interface User {
   turnoInicio?: string; // Format "HH:mm"
   turnoFin?: string;    // Format "HH:mm"
   maxPacientes?: number;
+  // Patient portal fields
+  tipoUsuario?: 'PROFESIONAL' | 'PACIENTE'; // Type of user
+  patientId?: string; // If tipoUsuario is PACIENTE, links to Patient.id
 }
 
 export interface Patient {
@@ -75,11 +78,11 @@ export interface HandoverNote {
   // Role-specific fields (Medico)
   antibioticStatus?: string; // Legacy field for backwards compatibility or simple notes
   antibioticData?: {        // New structured field
-      action: string;       // Iniciar, Continuar, Cambiar, Finalizar, No Aplica
-      medicamento?: string;
-      dosisMg?: number;
-      frecuenciaHoras?: number;
-      diasTratamiento?: number;
+    action: string;       // Iniciar, Continuar, Cambiar, Finalizar, No Aplica
+    medicamento?: string;
+    dosisMg?: number;
+    frecuenciaHoras?: number;
+    diasTratamiento?: number;
   };
   oxygenInfo?: string;
   labRequests?: string;
@@ -103,7 +106,7 @@ export interface HandoverNote {
   tomaGlucometrias?: string;
   soporteNutricional?: string;
   estadoPiel?: string;
-  
+
   // Role-specific fields (Fisioterapia - Secciones 17-19)
   fisioterapia?: {
     modalidad: string; // Respiratoria / Física / Integral
