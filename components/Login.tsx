@@ -4,15 +4,17 @@ import { useAppContext } from '../context/AppContext.tsx';
 import { GlassCard, GlassButton, GlassInput } from './ui/GlassComponents.tsx';
 import { Icons } from '../constants.tsx';
 import Register from './Register.tsx';
+import ForgotPassword from './ForgotPassword.tsx';
 
 const Login: React.FC = () => {
     const [documento, setDocumento] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isRegistering, setIsRegistering] = useState(false);
+    const [isForgotPassword, setIsForgotPassword] = useState(false);
     const { login, users } = useAppContext();
 
-    const handleLogin = (e: React.FormEvent) => {
+    const handleLogin = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
 
@@ -21,17 +23,19 @@ const Login: React.FC = () => {
             return;
         }
 
-        const user = users.find(u => u.documento === documento && u.password === password);
-
-        if (user) {
-            login(user);
-        } else {
-            setError('Documento o clave incorrecta.');
+        try {
+            await login(documento, password);
+        } catch (err: any) {
+            setError(err.message || 'Documento o clave incorrecta.');
         }
     };
 
     if (isRegistering) {
         return <Register onBackToLogin={() => setIsRegistering(false)} />;
+    }
+
+    if (isForgotPassword) {
+        return <ForgotPassword onBackToLogin={() => setIsForgotPassword(false)} />;
     }
 
     return (
@@ -96,6 +100,16 @@ const Login: React.FC = () => {
                         <GlassButton type="submit" className="w-full !py-4 text-sm uppercase tracking-widest font-black" glow>
                             Iniciar Sesión
                         </GlassButton>
+
+                        <div className="text-center">
+                            <button
+                                type="button"
+                                onClick={() => setIsForgotPassword(true)}
+                                className="text-[10px] font-bold text-gray-400 hover:text-[#00E5FF] transition-all uppercase tracking-widest"
+                            >
+                                ¿Olvidaste tu contraseña?
+                            </button>
+                        </div>
                     </form>
 
                     <div className="pt-6 mt-8 text-center border-t border-white/5">
