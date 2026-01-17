@@ -38,7 +38,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, activeView }) => {
                 <div className="glass-panel px-6 py-3 flex items-center justify-between border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)] backdrop-blur-xl bg-white/5">
                     <div className="flex items-center gap-3 cursor-pointer group" onClick={() => onNavigate(userIsPatient ? 'patient_portal' : 'dashboard')}>
                         <div className="relative">
-                            <img src="/logo-camus.jpg" alt="Camus Logo" className="w-10 h-10 rounded-full border border-[#00E5FF]/30 object-cover group-hover:border-[#00E5FF] transition-all" />
+                            <img src="/icons/icon-192x192.png" alt="Camus Logo" className="w-10 h-10 rounded-full border border-[#00E5FF]/30 object-contain p-1 bg-[#0B0E14] group-hover:border-[#00E5FF] transition-all" />
                             <div className="absolute inset-0 rounded-full bg-[#00E5FF]/20 blur-md opacity-0 group-hover:opacity-100 transition-opacity"></div>
                         </div>
                         <div className="hidden sm:block">

@@ -10,9 +10,9 @@
     "scope": "/",
     "icons": [
         {
-            "src": "/logo-camus.jpg",
+            "src": "/icons/icon-512x512.png",
             "sizes": "512x512",
-            "type": "image/jpeg",
+            "type": "image/png",
             "purpose": "any maskable"
         },
         {
@@ -84,7 +84,7 @@
             "url": "/?view=dashboard",
             "icons": [
                 {
-                    "src": "/logo-camus.jpg",
+                    "src": "/icons/icon-192x192.png",
                     "sizes": "192x192"
                 }
             ]
@@ -96,7 +96,7 @@
             "url": "/?view=map",
             "icons": [
                 {
-                    "src": "/logo-camus.jpg",
+                    "src": "/icons/icon-192x192.png",
                     "sizes": "192x192"
                 }
             ]
