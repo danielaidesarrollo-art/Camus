@@ -2,11 +2,20 @@ import React from 'react';
 import Login from './components/Login.tsx';
 import Dashboard from './components/Dashboard.tsx';
 import InstallPrompt from './components/InstallPrompt.tsx';
+import EmailJSTest from './components/EmailJSTest.tsx';
 import { AppProvider, useAppContext } from './context/AppContext.tsx';
 
 const AppContent: React.FC = () => {
     // Fix: Destructure properties directly from useAppContext as the 'state' object is no longer part of the context type.
     const { isLoading, error, user } = useAppContext();
+
+    // Diagnostic mode: access via ?test=emailjs in URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const testMode = urlParams.get('test');
+
+    if (testMode === 'emailjs') {
+        return <EmailJSTest />;
+    }
 
     if (isLoading) {
         return (

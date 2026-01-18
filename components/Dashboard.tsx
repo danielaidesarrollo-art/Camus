@@ -11,8 +11,11 @@ import StaffManagement from './StaffManagement.tsx';
 import ProductionOrderView from './ProductionOrderView.tsx';
 import PersonnelPlanner from './PersonnelPlanner.tsx';
 import PatientPortal from './PatientPortal.tsx';
+import { CopilotPanel } from './CopilotPanel.tsx';
+import { EmergencyButton } from './EmergencyButton.tsx';
 import { useAppContext } from '../context/AppContext.tsx';
 import { canAccessView, View, isPatient } from '../utils/permissions.ts';
+import type { PatientContext } from '../types/copilot';
 
 const Dashboard: React.FC = () => {
     const { user } = useAppContext();
@@ -88,7 +91,33 @@ const Dashboard: React.FC = () => {
                 </div>
             </main>
 
-            {/* Fixed Bottom Nav for Mobile on Omega (Triage) view could go here if needed per Stitch specs */}
+            {/* AI Copilot Panel - Available for all professionals */}
+            {user && !isPatient(user) && (
+                <CopilotPanel
+                    patientContext={{
+                        patientId: 'current',
+                        age: 0,
+                        gender: 'M',
+                        diagnoses: [],
+                        medications: [],
+                        allergies: []
+                    } as PatientContext}
+                />
+            )}
+
+            {/* Emergency Button - Available for all professionals */}
+            {user && !isPatient(user) && (
+                <EmergencyButton
+                    patientContext={{
+                        patientId: 'current',
+                        age: 0,
+                        gender: 'M',
+                        diagnoses: [],
+                        medications: [],
+                        allergies: []
+                    } as PatientContext}
+                />
+            )}
         </div>
     );
 };

@@ -17,7 +17,7 @@ export const ECOSYSTEM_CONFIG = {
         // Sirius - Authentication & Authorization Gateway
         sirius: {
             enabled: true,
-            baseUrl: process.env.VITE_SIRIUS_URL || 'https://sirius-api.daniel-ai.com',
+            baseUrl: import.meta.env.VITE_SIRIUS_URL || 'https://safecore-3nwymmvkw5a-uc.a.run.app',
             endpoints: {
                 auth: '/auth/login',
                 validate: '/auth/validate',
@@ -34,12 +34,12 @@ export const ECOSYSTEM_CONFIG = {
         // Orion - Triage & Clinical Decision Support
         orion: {
             enabled: true,
-            baseUrl: process.env.VITE_ORION_URL || 'https://orion-api.daniel-ai.com',
+            baseUrl: import.meta.env.VITE_ORION_URL || 'https://orion-3nwymmvkw5a-uc.a.run.app',
             endpoints: {
-                triage: '/triage/assess',
-                clinicalNotes: '/clinical/notes',
-                aiAnalysis: '/ai/analyze',
-                recommendations: '/ai/recommendations'
+                triage: '/api/triage',
+                clinicalNotes: '/api/notes',
+                aiAnalysis: '/api/analyze',
+                recommendations: '/api/recommendations'
             },
             features: {
                 aiTriage: true,
@@ -51,7 +51,7 @@ export const ECOSYSTEM_CONFIG = {
         // Vega - Data Core & Analytics
         vega: {
             enabled: true,
-            baseUrl: process.env.VITE_VEGA_URL || 'https://vega-api.daniel-ai.com',
+            baseUrl: import.meta.env.VITE_VEGA_URL || 'https://datacore-3nwymmvkw5a-uc.a.run.app',
             endpoints: {
                 patients: '/data/patients',
                 handovers: '/data/handovers',
@@ -68,7 +68,7 @@ export const ECOSYSTEM_CONFIG = {
         // Phoenix - Wound Care (Optional Integration)
         phoenix: {
             enabled: false,
-            baseUrl: process.env.VITE_PHOENIX_URL || 'https://phoenix-api.daniel-ai.com',
+            baseUrl: import.meta.env.VITE_PHOENIX_URL || 'https://phoenix-api.daniel-ai.com',
             endpoints: {
                 wounds: '/wounds/list',
                 assessments: '/wounds/assess',
@@ -100,9 +100,9 @@ export const ECOSYSTEM_CONFIG = {
         patientPortal: true,
         pwaSupport: true,
         offlineMode: true,
-        biometricAuth: false, // Disabled for now, requires Sirius integration
-        aiAnalysis: false, // Disabled for now, requires Orion integration
-        realTimeSync: false // Disabled for now, requires Vega integration
+        biometricAuth: true,
+        aiAnalysis: true,
+        realTimeSync: true
     }
 };
 

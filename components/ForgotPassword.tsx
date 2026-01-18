@@ -84,8 +84,8 @@ const ForgotPassword: React.FC<ForgotPasswordProps> = ({ onBackToLogin }) => {
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-[#00E5FF] to-[#A855F7] rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                         <img
-                            src="/logo.jpg"
-                            alt="Camus Logo"
+                            src="/logo-polaris.jpg"
+                            alt="Polaris Core Logo"
                             className="relative w-32 h-32 rounded-full border border-white/10 glow-cyan mb-6 object-cover shadow-2xl transition-transform duration-500 group-hover:scale-105"
                         />
                     </div>

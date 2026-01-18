@@ -55,18 +55,27 @@ export const emailService = {
         } catch (error: any) {
             console.error('[EmailService] ❌ Failed to send password reset email');
             console.error('[EmailService] Error details:', error);
+            console.error('[EmailService] Error type:', typeof error);
+            console.error('[EmailService] Error keys:', error ? Object.keys(error) : 'null');
+            console.error('[EmailService] Error status:', error?.status);
+            console.error('[EmailService] Error text:', error?.text);
+            console.error('[EmailService] Error message:', error?.message);
 
             // Provide more specific error messages
             let errorMessage = 'No se pudo enviar el correo de recuperación.';
 
-            if (error?.text?.includes('Invalid')) {
+            if (error?.text?.includes('Invalid') || error?.text?.includes('invalid')) {
                 errorMessage = 'Configuración de EmailJS inválida. Verifica tus credenciales.';
+            } else if (error?.text?.includes('not found') || error?.status === 404) {
+                errorMessage = 'Servicio o plantilla no encontrada. Verifica los IDs en .env';
             } else if (error?.status === 400) {
                 errorMessage = 'Error en los parámetros del email. Contacta al administrador.';
             } else if (error?.status === 403) {
                 errorMessage = 'Acceso denegado. Verifica tu cuenta de EmailJS.';
             } else if (error?.status === 412) {
                 errorMessage = 'Plantilla de email no encontrada. Verifica la configuración.';
+            } else if (error?.message) {
+                errorMessage = `Error: ${error.message}`;
             }
 
             throw new Error(errorMessage);
