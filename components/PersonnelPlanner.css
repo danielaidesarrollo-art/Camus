@@ -1,0 +1,33 @@
+
+.etp-card-accent {
+    position: absolute;
+    top: -1.5rem;
+    right: -1.5rem;
+    width: 6rem;
+    height: 6rem;
+    border-radius: 9999px;
+    filter: blur(48px);
+    opacity: 0.2;
+    transition: opacity 0.3s;
+    pointer-events: none;
+}
+
+.group:hover .etp-card-accent {
+    opacity: 0.4;
+}
+
+.etp-icon-wrapper {
+    padding: 0.75rem;
+    border-radius: 0.75rem;
+    background-color: rgba(255, 255, 255, 0.05);
+    border: 1px solid transparent;
+}
+
+/* Dynamic color variants */
+.etp-cyan .etp-card-accent { background-color: #00E5FF; }
+.etp-purple .etp-card-accent { background-color: #A855F7; }
+.etp-green .etp-card-accent { background-color: #34D399; }
+
+.etp-cyan .etp-icon-wrapper { border-color: rgba(0, 229, 255, 0.25); color: #00E5FF; }
+.etp-purple .etp-icon-wrapper { border-color: rgba(168, 85, 247, 0.25); color: #A855F7; }
+.etp-green .etp-icon-wrapper { border-color: rgba(52, 211, 153, 0.25); color: #34D399; }

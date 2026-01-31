@@ -13,7 +13,19 @@ export const ECOSYSTEM_CONFIG = {
     },
 
     // Integration Endpoints
+    // Integration Endpoints
+    CORES: {
+        GATEWAY: 'https://calm-ties-study.loca.lt'
+    },
     services: {
+        // Copilot Gateway (New)
+        gateway: {
+            enabled: true,
+            baseUrl: 'https://calm-ties-study.loca.lt',
+            endpoints: {
+                invoke: '/v1/copilot/invoke'
+            }
+        },
         // Sirius - Authentication & Authorization Gateway
         sirius: {
             enabled: true,

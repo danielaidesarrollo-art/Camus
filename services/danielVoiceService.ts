@@ -21,8 +21,8 @@ class DanielVoiceService {
 
         this.config = {
             modelWeights: {
-                gptSoVITS: 'Daniel_Felipe_e8_s720.pth',
-                checkpoint: 'Daniel_Felipe-e15.ckpt'
+                gptSoVITS: 'Daniel_Official_v2_e10.pth',
+                checkpoint: 'Daniel_Official_v2_final.ckpt'
             },
             audioSamples: ['daniel.wav'],
             voiceSettings: {

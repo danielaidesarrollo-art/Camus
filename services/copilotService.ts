@@ -72,52 +72,22 @@ ${Array.from(this.protocols.values()).map(p => `- ${p.name} (${p.version})`).joi
         return context;
     }
 
-    /**
-     * Get recommendation from Gemini Flash
-     */
     private async getRecommendation(context: string, query: string): Promise<CopilotRecommendation> {
         try {
-            const prompt = `
-You are a medical AI copilot assistant for home healthcare professionals.
-Your role is to provide evidence-based recommendations while ensuring the final decision is always made by the human professional.
+            const { gatewayClient } = await import('./gatewayClient');
 
-Context:
-${context}
-
-Professional's Query: ${query}
-
-Provide a structured recommendation including:
-1. Primary recommendation with confidence level
-2. Evidence supporting the recommendation
-3. Alternative options
-4. Warnings or contraindications
-5. Monitoring requirements
-
-Remember: This is a recommendation only. The professional will make the final decision.
-            `.trim();
-
-            const response = await fetch(`${this.baseUrl}/models/gemini-flash-1.5:generateContent?key=${this.apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{ text: prompt }]
-                    }],
-                    generationConfig: {
-                        temperature: 0.7,
-                        topK: 40,
-                        topP: 0.95,
-                        maxOutputTokens: 2048,
-                    }
-                })
+            const response = await gatewayClient.invoke({
+                type: 'clinical_recommendation',
+                app: 'camus',
+                priority: 'NORMAL',
+                data: {
+                    query: query,
+                    context: context
+                }
             });
 
-            if (!response.ok) {
-                throw new Error(`Gemini API error: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            const text = data.candidates[0].content.parts[0].text;
+            // The Gateway returns the processed AI response
+            const text = response.ai_analysis || response.result || response.text;
 
             // Parse the response into a structured recommendation
             return this.parseRecommendation(text);
@@ -136,100 +106,69 @@ Remember: This is a recommendation only. The professional will make the final de
         const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
 
         // Determine recommendation type
-        let type: 'diagnostic' | 'therapeutic' | 'preventive' | 'monitoring' = 'therapeutic';
+        let type: 'diagnostic' | 'therapeutic' | 'monitoring' | 'referral' = 'therapeutic';
         const lowerText = text.toLowerCase();
         if (lowerText.includes('diagnos') || lowerText.includes('evalua')) {
             type = 'diagnostic';
-        } else if (lowerText.includes('prevent') || lowerText.includes('profilax')) {
-            type = 'preventive';
+        } else if (lowerText.includes('refer') || lowerText.includes('traslado')) {
+            type = 'referral';
         } else if (lowerText.includes('monitor') || lowerText.includes('seguimiento')) {
             type = 'monitoring';
         }
 
-        // Extract confidence level (look for percentages or confidence indicators)
-        let confidence = 75; // default
+        // Extract confidence level
+        let confidence = 75;
         const confidenceMatch = text.match(/(\d+)%|confianza[:\s]+(\d+)/i);
         if (confidenceMatch) {
             confidence = parseInt(confidenceMatch[1] || confidenceMatch[2]);
-        } else if (lowerText.includes('alta confianza') || lowerText.includes('high confidence')) {
-            confidence = 90;
-        } else if (lowerText.includes('baja confianza') || lowerText.includes('low confidence')) {
-            confidence = 60;
         }
 
-        // Extract evidence (look for references, studies, guidelines)
+        // Extract evidence
         const evidence: string[] = [];
-        const evidencePatterns = [
-            /evidencia[:\s]+([^\n]+)/gi,
-            /estudio[s]?[:\s]+([^\n]+)/gi,
-            /guía[s]?[:\s]+([^\n]+)/gi,
-            /referencia[s]?[:\s]+([^\n]+)/gi
-        ];
+        const evidencePatterns = [/evidencia[:\s]+([^\n]+)/gi, /estudio[s]?[:\s]+([^\n]+)/gi];
         evidencePatterns.forEach(pattern => {
             const matches = text.matchAll(pattern);
-            for (const match of matches) {
-                if (match[1]) evidence.push(match[1].trim());
-            }
+            for (const match of matches) { if (match[1]) evidence.push(match[1].trim()); }
         });
 
         // Extract alternatives
         const alternatives: string[] = [];
-        const altSection = text.match(/alternativa[s]?[:\s]+([\s\S]*?)(?=\n\n|advertencia|contraindicación|$)/i);
+        const altSection = text.match(/alternativa[s]?[:\s]+([\s\S]*?)(?=\n\n|$)/i);
         if (altSection) {
-            const altLines = altSection[1].split('\n')
-                .map(l => l.trim())
-                .filter(l => l.length > 0 && (l.startsWith('-') || l.startsWith('•') || l.match(/^\d+\./)));
-            alternatives.push(...altLines.map(l => l.replace(/^[-•\d.]\s*/, '')));
+            const altLines = altSection[1].split('\n').map(l => l.trim()).filter(l => l.length > 0 && (l.startsWith('-') || l.startsWith('•')));
+            alternatives.push(...altLines.map(l => l.replace(/^[-•]\s*/, '')));
         }
 
-        // Extract warnings and contraindications
+        // Extract warnings
         const warnings: string[] = [];
-        const warningPatterns = [
-            /advertencia[s]?[:\s]+([^\n]+)/gi,
-            /contraindicación[es]*[:\s]+([^\n]+)/gi,
-            /precaución[es]*[:\s]+([^\n]+)/gi,
-            /⚠️\s*([^\n]+)/gi
-        ];
+        const warningPatterns = [/advertencia[s]?[:\s]+([^\n]+)/gi, /contraindicación[es]*[:\s]+([^\n]+)/gi];
         warningPatterns.forEach(pattern => {
             const matches = text.matchAll(pattern);
-            for (const match of matches) {
-                if (match[1]) warnings.push(match[1].trim());
-            }
+            for (const match of matches) { if (match[1]) warnings.push(match[1].trim()); }
         });
 
-        // Extract main recommendation (first substantial paragraph)
+        // Extract main recommendation
         let recommendation = text;
-        const recSection = text.match(/recomendación[:\s]+([\s\S]*?)(?=\n\n|evidencia|alternativa|$)/i);
+        const recSection = text.match(/recomendación[:\s]+([\s\S]*?)(?=\n\n|$)/i);
         if (recSection) {
             recommendation = recSection[1].trim();
-        } else {
-            // Take first paragraph if no explicit recommendation section
-            const firstPara = lines.find(l => l.length > 50);
-            if (firstPara) recommendation = firstPara;
         }
 
-        // Determine if confirmation is required (high risk or low confidence)
-        const requiresConfirmation = confidence < 70 ||
-            warnings.length > 0 ||
-            lowerText.includes('requiere confirmación') ||
-            lowerText.includes('consultar');
+        const requiresConfirmation = confidence < 70 || warnings.length > 0;
 
         return {
             id: `rec_${Date.now()}`,
             type,
             recommendation,
             confidence,
-            evidence: evidence.length > 0 ? evidence : ['Basado en análisis de IA médica'],
-            alternatives: alternatives.length > 0 ? alternatives : [],
-            warnings: warnings.length > 0 ? warnings : [],
+            evidence: evidence.map(e => ({ source: e, level: 'B', summary: e, reference: '' })),
+            alternatives: alternatives.map(a => ({ option: a, pros: [], cons: [] })),
+            warnings: warnings.map(w => ({ message: w, severity: 'warning' })),
             requiresConfirmation,
             timestamp: new Date()
         };
     }
 
-    /**
-     * Record user decision
-     */
     async recordDecision(decision: UserDecision): Promise<void> {
         console.log('[Copilot] Decision recorded:', decision);
 

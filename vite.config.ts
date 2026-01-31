@@ -12,6 +12,7 @@ export default defineConfig(({ mode }) => {
     server: {
       port: 3000,
       host: '0.0.0.0',
+      allowedHosts: ['camus-frontend-3neymvkw5a-uc.a.run.app'],
     },
     plugins: [react()],
     define: {

@@ -61,6 +61,11 @@ const Login: React.FC = () => {
                     <p className="text-gray-400 font-medium uppercase tracking-[0.3em] text-[10px]">
                         Atención Extramural Inteligente
                     </p>
+
+                    {/* Sponsor / Client Logo Area */}
+                    <div className="absolute top-0 right-0 p-4 opacity-40 hover:opacity-100 transition-opacity">
+                        {/* <img src="/client-logo.png" className="h-8 object-contain" /> */}
+                    </div>
                 </div>
 
                 <GlassCard className="!p-10 border-white/5 relative overflow-hidden">

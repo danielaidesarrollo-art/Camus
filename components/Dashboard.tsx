@@ -13,6 +13,7 @@ import PersonnelPlanner from './PersonnelPlanner.tsx';
 import PatientPortal from './PatientPortal.tsx';
 import { CopilotPanel } from './CopilotPanel.tsx';
 import { EmergencyButton } from './EmergencyButton.tsx';
+import { ServicePlanningWidget } from './ServicePlanningWidget.tsx';
 import { useAppContext } from '../context/AppContext.tsx';
 import { canAccessView, View, isPatient } from '../utils/permissions.ts';
 import type { PatientContext } from '../types/copilot';
@@ -53,7 +54,13 @@ const Dashboard: React.FC = () => {
 
         switch (activeView) {
             case 'dashboard':
-                return <PatientList />;
+                return (
+                    <>
+                        {/* New Service Planning Widget (Phase 2 Requirement) */}
+                        <ServicePlanningWidget />
+                        <PatientList />
+                    </>
+                );
             case 'patient_portal':
                 return <PatientPortal />;
             case 'handover':
@@ -78,46 +85,64 @@ const Dashboard: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen flex flex-col bg-[#0B0E14] font-inter">
+        <div className="hud-layout bg-[#0B0E14] font-inter">
             {/* Background decorative glows */}
             <div className="fixed top-0 right-0 w-[500px] h-[500px] bg-[#00E5FF] opacity-[0.03] blur-[150px] pointer-events-none"></div>
             <div className="fixed bottom-0 left-0 w-[500px] h-[500px] bg-[#00E5FF] opacity-[0.03] blur-[150px] pointer-events-none"></div>
 
-            <Navbar onNavigate={setActiveView} activeView={activeView} />
+            <header className="hud-header z-50">
+                <Navbar onNavigate={setActiveView} activeView={activeView} />
+            </header>
 
-            <main className="flex-grow p-4 md:p-8 relative z-10 overflow-x-hidden">
-                <div className="max-w-7xl mx-auto animate-fade-in">
+            <aside className="peripheral-left z-10 overflow-y-auto custom-scrollbar">
+                <div className="animate-fade-in px-2">
+                    {activeView === 'dashboard' && <ServicePlanningWidget />}
                     {renderView()}
                 </div>
-            </main>
+            </aside>
 
-            {/* AI Copilot Panel - Available for all professionals */}
-            {user && !isPatient(user) && (
-                <CopilotPanel
-                    patientContext={{
-                        patientId: 'current',
-                        age: 0,
-                        gender: 'M',
-                        diagnoses: [],
-                        medications: [],
-                        allergies: []
-                    } as PatientContext}
-                />
-            )}
+            <div className="center-clear">
+                {/* 👓 Visual center is cleared for AR Passthrough/Vision */}
+                <div className="w-64 h-64 border-2 border-dashed border-[#00E5FF]/10 rounded-full flex items-center justify-center">
+                    <p className="text-[#00E5FF]/20 text-[10px] uppercase tracking-widest">Astra Vision Center</p>
+                </div>
+            </div>
 
-            {/* Emergency Button - Available for all professionals */}
-            {user && !isPatient(user) && (
-                <EmergencyButton
-                    patientContext={{
-                        patientId: 'current',
-                        age: 0,
-                        gender: 'M',
-                        diagnoses: [],
-                        medications: [],
-                        allergies: []
-                    } as PatientContext}
-                />
-            )}
+            <aside className="peripheral-right z-10 flex flex-col gap-4">
+                {/* AI Copilot Panel - Integrated into right HUD zone */}
+                {user && !isPatient(user) && (
+                    <CopilotPanel
+                        patientContext={{
+                            patientId: 'current',
+                            age: 0,
+                            gender: 'M',
+                            diagnoses: [],
+                            medications: [],
+                            allergies: []
+                        } as PatientContext}
+                    />
+                )}
+
+                {/* Emergency Button - Integrated into right HUD zone */}
+                {user && !isPatient(user) && (
+                    <EmergencyButton
+                        patientContext={{
+                            patientId: 'current',
+                            age: 0,
+                            gender: 'M',
+                            diagnoses: [],
+                            medications: [],
+                            allergies: []
+                        } as PatientContext}
+                    />
+                )}
+            </aside>
+
+            <footer className="hud-footer flex items-center justify-between px-8 text-[10px] text-gray-500 uppercase tracking-widest bg-black/20 backdrop-blur-md">
+                <span>Ecosistema Daniel AI - Camus v1.2.0</span>
+                <span>HUD Status: <span className="text-[#00E5FF]">Optimal</span></span>
+                <span>Secure Transit: <span className="text-[#10B981]">AES-256-GCM</span></span>
+            </footer>
         </div>
     );
 };

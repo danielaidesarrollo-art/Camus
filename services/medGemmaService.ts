@@ -53,9 +53,6 @@ class MedGemmaService {
         });
     }
 
-    /**
-     * Check interaction between two medications
-     */
     private async checkPairInteraction(
         med1: Medication,
         med2: Medication
@@ -68,44 +65,21 @@ class MedGemmaService {
         }
 
         try {
-            const prompt = `
-As a medical AI specialized in pharmacology, analyze the potential drug interaction between:
+            const { gatewayClient } = await import('./gatewayClient');
 
-Drug 1: ${med1.name} (${med1.dose}, ${med1.route}, ${med1.frequency})
-Drug 2: ${med2.name} (${med2.dose}, ${med2.route}, ${med2.frequency})
-
-Provide a structured analysis including:
-1. Severity level (critical/major/moderate/minor/none)
-2. Mechanism of interaction
-3. Clinical effects
-4. Management recommendations
-5. References
-
-If there is no significant interaction, respond with "NO_INTERACTION".
-            `.trim();
-
-            const response = await fetch(`${this.baseUrl}/models/gemini-pro:generateContent?key=${this.apiKey}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{
-                        parts: [{ text: prompt }]
-                    }],
-                    generationConfig: {
-                        temperature: 0.3, // Lower temperature for medical accuracy
-                        topK: 40,
-                        topP: 0.95,
-                        maxOutputTokens: 1024,
-                    }
-                })
+            const response = await gatewayClient.invoke({
+                type: 'drug_interaction_check',
+                app: 'camus',
+                priority: 'HIGH',
+                data: {
+                    drugs: [
+                        { name: med1.name, dose: med1.dose },
+                        { name: med2.name, dose: med2.dose }
+                    ]
+                }
             });
 
-            if (!response.ok) {
-                throw new Error(`Med-Gemma API error: ${response.statusText}`);
-            }
-
-            const data = await response.json();
-            const text = data.candidates[0].content.parts[0].text;
+            const text = response.ai_analysis || response.result || response.text;
 
             if (text.includes('NO_INTERACTION')) {
                 return null;

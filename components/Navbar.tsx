@@ -1,6 +1,7 @@
 
 
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { useAppContext } from '../context/AppContext.tsx';
 import { Icons } from '../constants.tsx';
 import { isPatient, canAccessView, View } from '../utils/permissions.ts';
@@ -28,9 +29,15 @@ const NavItem: React.FC<{ icon: React.ReactNode; label: string; isActive: boolea
 
 const Navbar: React.FC<NavbarProps> = ({ onNavigate, activeView }) => {
     const { user, logout } = useAppContext();
+    const { t, i18n } = useTranslation();
 
     const isChiefOrCoord = user?.cargo?.toUpperCase().includes('JEFE') || user?.cargo?.toUpperCase().includes('COORDINADOR');
     const userIsPatient = user && isPatient(user);
+
+    const toggleLanguage = () => {
+        const nextLng = i18n.language === 'es' ? 'en' : 'es';
+        i18n.changeLanguage(nextLng);
+    };
 
     return (
         <nav className="sticky top-0 z-50 px-4 py-3">
@@ -44,42 +51,48 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, activeView }) => {
                         <div className="hidden sm:block">
                             <span className="font-bold text-white text-lg font-outfit tracking-tight block leading-none">CAMUS</span>
                             <p className="text-[10px] text-[#00E5FF] font-bold uppercase tracking-[0.2em] opacity-80 mt-1">
-                                {userIsPatient ? 'Mi Portal' : 'Extramural'}
+                                {userIsPatient ? t('patient_portal') : 'Extramural'}
                             </p>
                         </div>
                     </div>
 
                     <div className="flex items-center gap-1 md:gap-2">
                         {userIsPatient ? (
-                            // Patient navigation - simplified
                             <>
-                                <NavItem icon={Icons.Home} label="Mi Portal" isActive={activeView === 'patient_portal'} onClick={() => onNavigate('patient_portal')} />
-                                <NavItem icon={Icons.Profile} label="Perfil" isActive={activeView === 'profile'} onClick={() => onNavigate('profile')} />
+                                <NavItem icon={Icons.Home} label={t('patient_portal')} isActive={activeView === 'patient_portal'} onClick={() => onNavigate('patient_portal')} />
+                                <NavItem icon={Icons.Profile} label={t('profile')} isActive={activeView === 'profile'} onClick={() => onNavigate('profile')} />
                             </>
                         ) : (
-                            // Professional navigation - full access based on permissions
                             <>
                                 {canAccessView(user, View.DASHBOARD) && (
-                                    <NavItem icon={Icons.Home} label="Pacientes" isActive={activeView === 'dashboard'} onClick={() => onNavigate('dashboard')} />
+                                    <NavItem icon={Icons.Home} label={t('patient_list')} isActive={activeView === 'dashboard'} onClick={() => onNavigate('dashboard')} />
                                 )}
                                 {canAccessView(user, View.MAP) && (
-                                    <NavItem icon={Icons.Map} label="Mapa" isActive={activeView === 'map'} onClick={() => onNavigate('map')} />
+                                    <NavItem icon={Icons.Map} label={t('map')} isActive={activeView === 'map'} onClick={() => onNavigate('map')} />
                                 )}
                                 {canAccessView(user, View.ROUTES) && (
-                                    <NavItem icon={Icons.Route} label="Rutas" isActive={activeView === 'routes'} onClick={() => onNavigate('routes')} />
+                                    <NavItem icon={Icons.Route} label={t('routes')} isActive={activeView === 'routes'} onClick={() => onNavigate('routes')} />
                                 )}
                                 {isChiefOrCoord && canAccessView(user, View.PRODUCTION) && (
-                                    <NavItem icon={Icons.ClipboardCheck} label="Prod." isActive={activeView === 'production'} onClick={() => onNavigate('production')} />
+                                    <NavItem icon={Icons.ClipboardCheck} label={t('production')} isActive={activeView === 'production'} onClick={() => onNavigate('production')} />
                                 )}
                                 {isChiefOrCoord && canAccessView(user, View.PERSONNEL) && (
-                                    <NavItem icon={Icons.Users} label="Planeación" isActive={activeView === 'personnel'} onClick={() => onNavigate('personnel')} />
+                                    <NavItem icon={Icons.Users} label={t('staff')} isActive={activeView === 'personnel'} onClick={() => onNavigate('personnel')} />
                                 )}
-                                <NavItem icon={Icons.Profile} label="Perfil" isActive={activeView === 'profile'} onClick={() => onNavigate('profile')} />
+                                <NavItem icon={Icons.Profile} label={t('profile')} isActive={activeView === 'profile'} onClick={() => onNavigate('profile')} />
                             </>
                         )}
                     </div>
 
                     <div className="flex items-center gap-4 pl-4 border-l border-white/10 ml-2">
+                        {/* Language Selector (Directiva 10) */}
+                        <button
+                            onClick={toggleLanguage}
+                            className="text-[9px] font-black text-[#00E5FF] border border-[#00E5FF]/30 px-2 py-1 rounded uppercase hover:bg-[#00E5FF]/10 transition-all"
+                        >
+                            {i18n.language === 'es' ? 'EN' : 'ES'}
+                        </button>
+
                         <div className="text-right hidden sm:block">
                             <p className="text-sm font-bold text-white leading-tight font-outfit">{user?.nombre}</p>
                             <p className="text-[9px] text-gray-500 uppercase font-black tracking-widest mt-1 opacity-70">

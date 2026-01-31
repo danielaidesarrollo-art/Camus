@@ -1,6 +1,8 @@
 import React, { useState, useMemo } from 'react';
 import { GlassCard, GlassButton, GlassInput, GlassSelect } from './ui/GlassComponents.tsx';
 import { Icons } from '../constants.tsx';
+import { aiService } from '../utils/aiService';
+import './PersonnelPlanner.css';
 
 interface standardTimes {
     initialValoracion: number;
@@ -34,6 +36,37 @@ const PersonnelPlanner: React.FC = () => {
     const [distInitial, setDistInitial] = useState(10); // 10% new admissions per day
     const [distAntibiotic, setDistAntibiotic] = useState(60);
     const [distHealing, setDistHealing] = useState(30);
+
+    // AI Inference State
+    const [modelDoc, setModelDoc] = useState('');
+    const [censusData, setCensusData] = useState('');
+    const [inferenceResult, setInferenceResult] = useState<any>(null);
+    const [isInfereing, setIsInfereing] = useState(false);
+    const [isParsing, setIsParsing] = useState(false);
+
+    const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>, target: 'model' | 'census') => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        setIsParsing(true);
+        try {
+            let text = '';
+            if (file.type === 'application/pdf') {
+                const { extractTextFromPdf } = await import('../utils/pdfParser');
+                text = await extractTextFromPdf(file);
+            } else {
+                text = await file.text();
+            }
+
+            if (target === 'model') setModelDoc(text);
+            else setCensusData(text);
+        } catch (error) {
+            console.error('Error parsing file:', error);
+            alert('Error al procesar el archivo. Asegúrese de que sea un PDF o texto válido.');
+        } finally {
+            setIsParsing(false);
+        }
+    };
 
     // ETP Calculation Logic
     const calculations = useMemo(() => {
@@ -70,6 +103,27 @@ const PersonnelPlanner: React.FC = () => {
         };
     }, [census, productiveHours, times, distInitial, distAntibiotic, distHealing]);
 
+    const runAIInference = async () => {
+        if (!modelDoc || !censusData) {
+            alert('Por favor ingrese tanto el Modelo de Atención como el Censo de Pacientes.');
+            return;
+        }
+
+        setIsInfereing(true);
+        try {
+            const result = await aiService.runCapacityInference(modelDoc, censusData);
+            if (result.json) {
+                setInferenceResult(result.json);
+            } else if (result.error) {
+                alert(`Error en inferencia: ${result.error}`);
+            }
+        } catch (error) {
+            console.error('Inference Error:', error);
+        } finally {
+            setIsInfereing(false);
+        }
+    };
+
     const triggers = [
         { label: 'Censo vs Capacidad', status: census > 180 ? 'CRITICO' : census > 150 ? 'ALERTA' : 'OPTIMO', value: `${census}/200` },
         { label: 'Tasa de Utilizacion', status: calculations.utilization > 85 ? 'ALERTA' : 'NORMAL', value: `${Math.round(calculations.utilization)}%` },
@@ -81,16 +135,58 @@ const PersonnelPlanner: React.FC = () => {
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-white flex items-center gap-3 font-outfit">
                     <span className="p-2 bg-[#00E5FF]/10 rounded-xl text-[#00E5FF]">
-                        <Icons.ClipboardCheck size={24} />
+                        {Icons.ClipboardCheck}
                     </span>
-                    Planeación de Personal ETP
+                    Camus: Motor de Inferencia Operativa
                 </h1>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Configuration Panel */}
                 <div className="lg:col-span-1 space-y-6">
-                    <GlassCard title="Configuración de Población">
+                    <GlassCard title="Inyección de Datos AI">
+                        <div className="space-y-4">
+                            <div>
+                                <div className="flex justify-between items-center mb-2">
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest">Modelo de Atención</label>
+                                    <label className="cursor-pointer text-[#00E5FF] text-[10px] font-bold hover:underline">
+                                        Subir PDF
+                                        <input type="file" className="hidden" accept=".pdf,.txt" onChange={(e) => handleFileUpload(e, 'model')} />
+                                    </label>
+                                </div>
+                                <textarea
+                                    value={modelDoc}
+                                    onChange={(e) => setModelDoc(e.target.value)}
+                                    placeholder="Pegue el contenido o suba un PDF..."
+                                    className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-gray-300 focus:outline-none focus:border-[#00E5FF]/50 custom-scrollbar"
+                                />
+                            </div>
+                            <div>
+                                <div className="flex justify-between items-center mb-2">
+                                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-widest">Censo de Pacientes</label>
+                                    <label className="cursor-pointer text-[#00E5FF] text-[10px] font-bold hover:underline">
+                                        Subir Archivo
+                                        <input type="file" className="hidden" accept=".csv,.json,.txt" onChange={(e) => handleFileUpload(e, 'census')} />
+                                    </label>
+                                </div>
+                                <textarea
+                                    value={censusData}
+                                    onChange={(e) => setCensusData(e.target.value)}
+                                    placeholder="Dataset (CSV/JSON/Texto)..."
+                                    className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-3 text-xs text-gray-300 focus:outline-none focus:border-[#00E5FF]/50 custom-scrollbar"
+                                />
+                            </div>
+                            <GlassButton
+                                onClick={runAIInference}
+                                disabled={isInfereing || isParsing}
+                                className="w-full py-4 shadow-[0_0_20px_rgba(0,229,255,0.2)]"
+                            >
+                                {isParsing ? 'Analizando Documento...' : isInfereing ? 'Procesando Inferencia...' : 'Ejecutar Inferencia Camus'}
+                            </GlassButton>
+                        </div>
+                    </GlassCard>
+
+                    <GlassCard title="Configuración Manual (Fallback)" className="opacity-60 grayscale hover:opacity-100 hover:grayscale-0 transition-all">
                         <div className="space-y-4">
                             <label className="block text-sm font-medium text-gray-400 mb-2">
                                 Censo Total de Pacientes: <span className="text-[#00E5FF] font-bold">{census}</span>
@@ -100,6 +196,7 @@ const PersonnelPlanner: React.FC = () => {
                                 min="10"
                                 max="500"
                                 value={census}
+                                title="Ajustar censo de pacientes"
                                 onChange={(e) => setCensus(Number(e.target.value))}
                                 className="w-full h-2 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#00E5FF]"
                             />
@@ -111,82 +208,92 @@ const PersonnelPlanner: React.FC = () => {
                                 onChange={(e) => setProductiveHours(Number(e.target.value))}
                                 suffix="h/dia"
                             />
-
-                            <div className="pt-4 border-t border-white/5">
-                                <p className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4">Matriz de Tiempos (min)</p>
-                                <div className="grid grid-cols-2 gap-3">
-                                    <TimeInput label="Val. Inicial" value={times.initialValoracion} onChange={(v) => setTimes({ ...times, initialValoracion: v })} />
-                                    <TimeInput label="Seg. Médico" value={times.medicalFollowUp} onChange={(v) => setTimes({ ...times, medicalFollowUp: v })} />
-                                    <TimeInput label="Visita Enf." value={times.followUpAntibiotic} onChange={(v) => setTimes({ ...times, followUpAntibiotic: v })} />
-                                    <TimeInput label="Desplazam." value={times.commuteTime} onChange={(v) => setTimes({ ...times, commuteTime: v })} />
-                                </div>
-                            </div>
-                        </div>
-                    </GlassCard>
-
-                    <GlassCard title="Disparadores de Crecimiento" className="border-[#A855F7]/20">
-                        <div className="space-y-4">
-                            {triggers.map((t, idx) => (
-                                <div key={idx} className="flex justify-between items-center p-3 rounded-xl bg-white/5 border border-white/10">
-                                    <div>
-                                        <p className="text-[10px] text-gray-500 uppercase font-black">{t.label}</p>
-                                        <p className="text-sm font-bold text-white">{t.value}</p>
-                                    </div>
-                                    <span className={`px-2 py-1 rounded-lg text-[9px] font-bold ${t.status === 'CRITICO' ? 'bg-red-500/20 text-red-400 border border-red-500/30' :
-                                            t.status === 'ALERTA' ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30' :
-                                                'bg-green-500/20 text-green-400 border border-green-500/30'
-                                        }`}>
-                                        {t.status}
-                                    </span>
-                                </div>
-                            ))}
                         </div>
                     </GlassCard>
                 </div>
 
                 {/* Results Panel */}
                 <div className="lg:col-span-2 space-y-6">
-                    <GlassCard title="Cálculo de Requerimientos (ETP)" className="h-full">
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
-                            <EtpCard
-                                role="Médico"
-                                value={calculations.etpMedicine}
-                                color="#00E5FF"
-                                icon={<Icons.User size={24} />}
-                                tasks={["Valoraciones ingreso/egreso", "Análisis clínico HC", "Telexperticia"]}
-                            />
-                            <EtpCard
-                                role="Enfermería (Jefe)"
-                                value={calculations.etpNursing}
-                                color="#A855F7"
-                                icon={<Icons.Clipboard size={24} />}
-                                tasks={["Supervisión de cuidado", "Educación a cuidador", "Planificación logística"]}
-                            />
-                            <EtpCard
-                                role="Auxiliar"
-                                value={calculations.etpAssistant}
-                                color="#34D399"
-                                icon={<Icons.Users size={24} />}
-                                tasks={["Admin. medicamentos", "Curaciones básicas", "Toma de muestras"]}
-                            />
-                        </div>
+                    {inferenceResult ? (
+                        <div className="animate-fade-in space-y-6">
+                            <h2 className="text-xl font-bold text-[#00E5FF] flex items-center gap-2">
+                                <span className="animate-pulse">●</span> Resultado de Inferencia: Modelo {inferenceResult.model_type}
+                            </h2>
 
-                        <div className="mt-8 p-6 rounded-2xl bg-white/5 border border-white/10 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <Icons.Home size={120} />
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <EtpCard
+                                    role="Medicina"
+                                    value={inferenceResult.etp_required.medicina}
+                                    variant="cyan"
+                                    tasks={["Factor K: " + (inferenceResult.scenarios.excellence.k || 1.15)]}
+                                    icon={Icons.User}
+                                />
+                                <EtpCard
+                                    role="Enfermería Jefe"
+                                    value={inferenceResult.etp_required.enfermeria_jefe}
+                                    variant="purple"
+                                    tasks={["Estratificación Automática"]}
+                                    icon={Icons.Clipboard}
+                                />
+                                <EtpCard
+                                    role="Auxiliares"
+                                    value={inferenceResult.etp_required.auxiliares}
+                                    variant="green"
+                                    tasks={["Productividad Ajustada"]}
+                                    icon={Icons.Users}
+                                />
                             </div>
-                            <h3 className="text-lg font-bold text-white mb-2">Resumen Operativo</h3>
-                            <p className="text-gray-400 text-sm leading-relaxed max-w-2xl">
-                                Según el censo de <span className="text-white font-bold">{census} pacientes</span> y una jornada productiva de {productiveHours}h,
-                                se requiere una plantilla total de <span className="text-[#00E5FF] font-bold">{(calculations.etpMedicine + calculations.etpNursing + calculations.etpAssistant).toFixed(1)} ETPs</span>.
-                                La tasa de utilización se mantiene en un rango <span className="text-green-400 font-bold">Óptimo</span>.
-                            </p>
-                            <div className="mt-6 flex gap-4">
-                                <GlassButton className="!py-2 text-xs">Descargar Matriz</GlassButton>
-                                <GlassButton className="!py-2 text-xs border-[#A855F7]/50 text-[#A855F7]">Simular Expansión</GlassButton>
+
+                            <GlassCard title="Análisis de Brecha y Escenarios" className="border-cyan-500/30">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <div className="p-4 rounded-xl bg-white/5 border border-white/10">
+                                        <p className="text-[10px] text-gray-500 uppercase font-black">Mínimo Operativo</p>
+                                        <p className="text-2xl font-bold text-white">{inferenceResult.scenarios.minimum.total_etp} <span className="text-xs text-gray-500 font-normal">ETPs</span></p>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-cyan-500/10 border border-cyan-500/30">
+                                        <p className="text-[10px] text-cyan-400 uppercase font-black">Excelente / Acreditación</p>
+                                        <p className="text-2xl font-bold text-white">{inferenceResult.scenarios.excellence.total_etp} <span className="text-xs text-gray-500 font-normal">ETPs</span></p>
+                                    </div>
+                                    <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/30">
+                                        <p className="text-[10px] text-red-400 uppercase font-black">Brecha Detectada</p>
+                                        <p className="text-2xl font-bold text-white">{inferenceResult.scenarios.gap.difference} <span className="text-xs text-gray-500 font-normal">ETPs</span></p>
+                                    </div>
+                                </div>
+                                {inferenceResult.risk_alert && (
+                                    <div className="mt-4 p-4 rounded-xl bg-red-500/20 border border-red-500/40 text-red-100 text-sm flex items-center gap-3">
+                                        <span className="text-red-400">{Icons.AlertCircle}</span>
+                                        {inferenceResult.risk_alert}
+                                    </div>
+                                )}
+                            </GlassCard>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <GlassCard title="Insights Estratégicos">
+                                    <ul className="space-y-3">
+                                        {inferenceResult.insights?.map((insight: string, idx: number) => (
+                                            <li key={idx} className="flex items-start gap-2 text-sm text-gray-400">
+                                                <span className="text-cyan-400">•</span> {insight}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                </GlassCard>
+                                <div className="space-y-4">
+                                    <GlassButton className="w-full">Exportar Informe Técnico (JSON)</GlassButton>
+                                    <GlassButton className="w-full border-white/10 text-gray-400">Ver Lógica de Algoritmo</GlassButton>
+                                </div>
                             </div>
                         </div>
-                    </GlassCard>
+                    ) : (
+                        <div className="h-full flex flex-col items-center justify-center text-center p-12 opacity-50 space-y-6">
+                            <div className="p-8 rounded-full bg-white/5 border border-white/10 animate-pulse">
+                                <span className="text-gray-500">{Icons.ClipboardCheck}</span>
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white mb-2">Motor de Inferencia Camus en Espera</h3>
+                                <p className="text-gray-400 max-w-md">Inyecte un modelo de atención y un censo de pacientes para generar el análisis de capacidad operativa.</p>
+                            </div>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
@@ -200,6 +307,7 @@ const TimeInput = ({ label, value, onChange }: { label: string, value: number, o
             <input
                 type="number"
                 value={value}
+                title={label}
                 onChange={(e) => onChange(Number(e.target.value))}
                 className="w-full bg-white/5 border border-white/10 rounded-lg py-2 px-3 text-sm text-white focus:outline-none focus:border-[#00E5FF]/50"
             />
@@ -207,11 +315,11 @@ const TimeInput = ({ label, value, onChange }: { label: string, value: number, o
     </div>
 );
 
-const EtpCard = ({ role, value, color, icon, tasks }: { role: string, value: number, color: string, icon: any, tasks: string[] }) => (
-    <div className="p-6 rounded-2xl bg-white/5 border border-white/10 relative overflow-hidden group hover:bg-white/[0.08] transition-all hover:translate-y-[-4px]">
-        <div className="absolute -top-6 -right-6 w-24 h-24 blur-3xl opacity-20 transition-all group-hover:opacity-40" style={{ backgroundColor: color }}></div>
+const EtpCard = ({ role, value, variant, icon, tasks }: { role: string, value: number, variant: 'cyan' | 'purple' | 'green', icon: any, tasks: string[] }) => (
+    <div className={`p-6 rounded-2xl bg-white/5 border border-white/10 relative overflow-hidden group hover:bg-white/[0.08] transition-all hover:translate-y-[-4px] etp-${variant}`}>
+        <div className="etp-card-accent"></div>
         <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 rounded-xl bg-white/5 text-white" style={{ borderColor: `${color}40`, color }}>
+            <div className="etp-icon-wrapper">
                 {icon}
             </div>
             <div>

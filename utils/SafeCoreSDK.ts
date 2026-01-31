@@ -181,6 +181,18 @@ export class SafeCoreSDK {
             timestamp: new Date().toISOString()
         };
     }
+
+    /**
+     * Specialized Capacity Inference via Camus AI Engine
+     */
+    public async requestCapacityInference(modelDoc: string, censusData: string): Promise<any> {
+        // This is a station-level tool, but it's registered in SafeCore
+        console.log(`[SafeCore] Station ${this.config.station} requesting capacity inference...`);
+        // In a production ecosystem, this would call an Orion/Atlas endpoint
+        // For now, we use the local aiService which is already configured
+        const { aiService } = await import('./aiService');
+        return await aiService.runCapacityInference(modelDoc, censusData);
+    }
 }
 
 export const safeCore = new SafeCoreSDK();

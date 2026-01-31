@@ -62,6 +62,10 @@ export const AldebaranPanel: React.FC<AldebaranPanelProps> = ({ patientContext, 
             'Aldebaran activado. Iniciando protocolo de RCP. Comience con 30 compresiones torácicas.',
             'immediate'
         );
+
+        // Rule #7: Log Critical Access to Sirius
+        console.warn("[SIRIUS_MEDICAL_AUDIT] EMERGENCY_PROTOCOL_ACTIVATED: 'BREAK_THE_GLASS'");
+        // In production: await siriusService.logEmergencyAccess(patientContext.patientId);
     }, []);
 
     const playMetronome = () => {
@@ -181,8 +185,8 @@ export const AldebaranPanel: React.FC<AldebaranPanelProps> = ({ patientContext, 
                         <button
                             onClick={() => setIsCompressing(!isCompressing)}
                             className={`w-full py-4 rounded-lg font-bold text-lg transition-all ${isCompressing
-                                    ? 'bg-red-500 text-white animate-pulse'
-                                    : 'bg-cyan-500 text-white hover:bg-cyan-600'
+                                ? 'bg-red-500 text-white animate-pulse'
+                                : 'bg-cyan-500 text-white hover:bg-cyan-600'
                                 }`}
                         >
                             {isCompressing ? '⏸ Pausar' : '▶ Iniciar Compresiones'}

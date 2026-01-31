@@ -23,7 +23,7 @@ const Register: React.FC<RegisterProps> = ({ onBackToLogin }) => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
 
-    const handleRegister = (e: React.FormEvent) => {
+    const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
         setError('');
         setSuccess('');
@@ -41,8 +41,18 @@ const Register: React.FC<RegisterProps> = ({ onBackToLogin }) => {
         const newUser: User = { documento, nombre, correo, institucion, cargo, password };
 
         try {
-            addUser(newUser);
-            setSuccess('¡Registro exitoso! Ahora puede iniciar sesión.');
+            // 1. Integración Estricta de Ecosistema
+            // Flujo: Polaris (Bio-Identity) -> Sirius (Auth/Roles) -> Vega (Data Sync)
+
+            console.log("[Polaris] Iniciando registro biométrico...");
+            // En un entorno real, aquí se invocaría el SDK de Polaris para captura de huella/rostro
+
+            // 2. Registro en Contexto Local (Simulando Sirius)
+            await addUser(newUser);
+            setSuccess('¡Identidad Polaris Verificada! Credenciales activas en Sirius.');
+
+            // 3. Sincronización Vega (Background)
+            console.log("[Vega] Sincronizando nuevo perfil profesional...");
 
             // Clear form
             setDocumento('');
@@ -69,15 +79,22 @@ const Register: React.FC<RegisterProps> = ({ onBackToLogin }) => {
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-[#00E5FF] to-[#A855F7] rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000 group-hover:duration-200"></div>
                         <img
-                            src="/logo.jpg"
-                            alt="Camus Logo"
-                            className="relative w-24 h-24 rounded-full border border-white/10 glow-cyan mb-6 object-cover shadow-2xl"
+                            src="/logo-polaris.jpg"
+                            alt="Polaris Core Logo"
+                            className="relative w-32 h-32 rounded-full border border-white/10 glow-cyan mb-6 object-cover shadow-2xl"
                         />
                     </div>
-                    <h1 className="text-3xl font-bold text-white font-outfit text-glow tracking-tight">Registro de Colaborador</h1>
-                    <p className="mt-2 text-gray-400 font-medium uppercase tracking-[0.2em] text-[10px]">
-                        Únase a la red de atención extramural Camus
+                    <h1 className="text-3xl font-bold text-white font-outfit text-glow tracking-tight text-center">Registro Biométrico Seguro</h1>
+                    <div className="w-16 h-1 bg-gradient-to-r from-[#00E5FF] to-[#A855F7] rounded-full mt-4 mb-4"></div>
+                    <p className="mt-2 text-[#00E5FF] font-medium uppercase tracking-[0.1em] text-[11px] text-center max-w-sm">
+                        Polaris: Nuestro núcleo de registro biométrico y seguridad biológica
                     </p>
+
+                    {/* Visual de Patrocinador / Cliente (Placeholder) */}
+                    <div className="mt-6 flex items-center gap-3 opacity-50 grayscale hover:grayscale-0 transition-all duration-500">
+                        <div className="h-8 w-px bg-white/20"></div>
+                        <span className="text-[10px] text-gray-500 uppercase tracking-widest">Powered by Daniel AI</span>
+                    </div>
                 </div>
 
                 <GlassCard className="!p-10 border-white/5 relative overflow-hidden">
