@@ -12,7 +12,7 @@ import ProductionOrderView from './ProductionOrderView.tsx';
 import PersonnelPlanner from './PersonnelPlanner.tsx';
 import PatientPortal from './PatientPortal.tsx';
 import { CopilotPanel } from './CopilotPanel.tsx';
-import { EmergencyButton } from './EmergencyButton.tsx';
+import { EscalationHub } from './EscalationHub.tsx';
 import { ServicePlanningWidget } from './ServicePlanningWidget.tsx';
 import { useAppContext } from '../context/AppContext.tsx';
 import { canAccessView, View, isPatient } from '../utils/permissions.ts';
@@ -123,9 +123,9 @@ const Dashboard: React.FC = () => {
                     />
                 )}
 
-                {/* Emergency Button - Integrated into right HUD zone */}
+                {/* Escalation Hub - Integrated into right HUD zone */}
                 {user && !isPatient(user) && (
-                    <EmergencyButton
+                    <EscalationHub
                         patientContext={{
                             patientId: 'current',
                             age: 0,

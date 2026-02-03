@@ -4,13 +4,19 @@ interface GlassCardProps {
     children: React.ReactNode;
     className?: string;
     onClick?: () => void;
+    title?: string | React.ReactNode;
 }
 
-export const GlassCard: React.FC<GlassCardProps> = ({ children, className = '', onClick }) => (
+export const GlassCard: React.FC<GlassCardProps> = ({ children, className = '', onClick, title }) => (
     <div
         className={`glass-card p-6 ${className} ${onClick ? 'cursor-pointer' : ''}`}
         onClick={onClick}
     >
+        {title && (
+            <div className="mb-4 pb-4 border-b border-white/5">
+                <h3 className="text-lg font-bold text-white uppercase tracking-wide">{title}</h3>
+            </div>
+        )}
         {children}
     </div>
 );
@@ -47,15 +53,23 @@ export const GlassButton: React.FC<GlassButtonProps> = ({
 
 interface GlassInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
     label?: string;
+    suffix?: string;
 }
 
-export const GlassInput: React.FC<GlassInputProps> = ({ label, className = '', ...props }) => (
+export const GlassInput: React.FC<GlassInputProps> = ({ label, suffix, className = '', ...props }) => (
     <div className="space-y-2 w-full">
         {label && <label className="text-sm font-medium text-gray-400 uppercase tracking-wider">{label}</label>}
-        <input
-            className={`w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00E5FF] focus:ring-1 focus:ring-[#00E5FF] transition-all ${className}`}
-            {...props}
-        />
+        <div className="relative">
+            <input
+                className={`w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-[#00E5FF] focus:ring-1 focus:ring-[#00E5FF] transition-all ${suffix ? 'pr-12' : ''} ${className}`}
+                {...props}
+            />
+            {suffix && (
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 text-sm pointer-events-none">
+                    {suffix}
+                </div>
+            )}
+        </div>
     </div>
 );
 

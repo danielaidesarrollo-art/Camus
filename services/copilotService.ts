@@ -19,7 +19,7 @@ class CopilotService {
     private conversationHistory: CopilotInvocation[];
 
     constructor() {
-        this.apiKey = import.meta.env.VITE_GEMINI_API_KEY || '';
+        this.apiKey = (import.meta as any).env.VITE_GEMINI_API_KEY || '';
         this.baseUrl = 'https://generativelanguage.googleapis.com/v1beta';
         this.protocols = new Map();
         this.conversationHistory = [];
@@ -76,10 +76,17 @@ ${Array.from(this.protocols.values()).map(p => `- ${p.name} (${p.version})`).joi
         try {
             const { gatewayClient } = await import('./gatewayClient');
 
+            // Determine if the task is clinical or administrative
+            const isAdminTask = /ruta|horario|agend|administrativ|logístic|personal/i.test(query);
+            const targetModel = isAdminTask ? 'gemini-flash' : 'med-gemma';
+
+            console.log(`[Copilot] Routing task to ${targetModel} based on query: "${query}"`);
+
             const response = await gatewayClient.invoke({
-                type: 'clinical_recommendation',
+                type: isAdminTask ? 'admin_task' : 'clinical_recommendation',
                 app: 'camus',
-                priority: 'NORMAL',
+                priority: isAdminTask ? 'NORMAL' : 'HIGH',
+                model: targetModel, // Explicitly request the specified model
                 data: {
                     query: query,
                     context: context
@@ -198,7 +205,8 @@ ${Array.from(this.protocols.values()).map(p => `- ${p.name} (${p.version})`).joi
                     indications: ['Blood pressure ≥130/80 mmHg', 'Cardiovascular risk factors'],
                     contraindications: [],
                     steps: [],
-                    monitoring: []
+                    monitoring: [],
+                    references: []
                 },
                 lastUpdated: new Date('2023-01-01'),
                 status: 'active'

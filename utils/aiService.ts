@@ -86,7 +86,7 @@ export const aiService = {
                 model: CAPACITY_MODEL,
                 contents: prompt,
                 config: {
-                    response_mime_type: "application/json"
+                    responseMimeType: "application/json"
                 }
             });
 

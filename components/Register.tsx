@@ -129,7 +129,7 @@ const Register: React.FC<RegisterProps> = ({ onBackToLogin }) => {
                             <GlassButton type="submit" variant="primary" className="flex-1 !py-4" glow>
                                 Finalizar Registro
                             </GlassButton>
-                            <GlassButton type="button" variant="secondary" onClick={onBackToLogin} className="flex-1 !py-4">
+                            <GlassButton type="button" variant="outline" onClick={onBackToLogin} className="flex-1 !py-4">
                                 Volver a Identificación
                             </GlassButton>
                         </div>

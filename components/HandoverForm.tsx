@@ -750,8 +750,7 @@ const HandoverForm: React.FC = () => {
                             </h4>
                             <GlassButton
                                 type="button"
-                                variant="secondary"
-                                size="sm"
+                                variant="outline"
                                 className="!py-1.5"
                                 onClick={handleClinicalAnalysis}
                                 disabled={isAiLoading}

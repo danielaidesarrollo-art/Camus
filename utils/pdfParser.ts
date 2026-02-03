@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+// @ts-ignore
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Setting worker path for pdfjs

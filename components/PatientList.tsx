@@ -44,7 +44,7 @@ const PatientList: React.FC = () => {
                     </div>
                 </div>
                 <GlassButton onClick={() => setIsNewPatientModalOpen(true)} glow className="h-[52px] !px-8">
-                    {Icons.Plus}
+                    <Icons.Plus />
                     <span className="ml-3 font-bold">Ingresar Paciente</span>
                 </GlassButton>
             </header>
@@ -109,11 +109,11 @@ const PatientList: React.FC = () => {
 
                         <div className="space-y-3 py-4 border-y border-white/5 mt-4">
                             <div className="flex items-center gap-3">
-                                <span className="p-1.5 bg-white/5 rounded-lg text-[#00E5FF] opacity-70">{Icons.Map}</span>
+                                <span className="p-1.5 bg-white/5 rounded-lg text-[#00E5FF] opacity-70"><Icons.Map /></span>
                                 <p className="text-sm text-gray-400 truncate leading-none">{patient.direccion}</p>
                             </div>
                             <div className="flex items-center gap-3">
-                                <span className="p-1.5 bg-white/5 rounded-lg text-[#00E5FF] opacity-70">{Icons.Home}</span>
+                                <span className="p-1.5 bg-white/5 rounded-lg text-[#00E5FF] opacity-70"><Icons.Home /></span>
                                 <p className="text-[11px] text-gray-300 font-bold uppercase tracking-wider leading-none">
                                     {patient.programa?.replace('Virrey solis en Casa ', '')}
                                 </p>

@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+// @ts-ignore
 import emailjs from '@emailjs/browser';
 
 interface EmailConfig {

@@ -5,7 +5,7 @@ interface Props {
   // the children passed via JSX in `index.tsx`, causing a "missing property" error.
   // Making it optional resolves this type-checking issue.
   children?: ReactNode;
-  FallbackComponent: React.ComponentType<{ error?: Error | null }>;
+  FallbackComponent: React.ComponentType<{ error: Error | null }>;
 }
 
 interface State {

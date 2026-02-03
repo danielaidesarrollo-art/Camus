@@ -139,7 +139,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate, onClose, o
                 <div className="flex flex-col md:flex-row justify-between items-start gap-6 relative z-10">
                     <div className="flex items-center gap-6">
                         <div className="w-20 h-20 rounded-2xl bg-[#00E5FF]/10 flex items-center justify-center text-[#00E5FF] text-3xl border border-[#00E5FF]/30 shadow-[0_0_30px_rgba(0,229,255,0.15)] group-hover:scale-105 transition-transform duration-500">
-                            {Icons.Profile}
+                            <Icons.Profile />
                         </div>
                         <div className="space-y-2">
                             <h3 className="text-3xl font-bold text-white font-outfit uppercase tracking-tight leading-none">{patient.nombreCompleto}</h3>
@@ -257,7 +257,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate, onClose, o
                 >
                     <div className="flex items-center gap-4 relative z-10">
                         <div className={`p-2.5 rounded-xl bg-white/5 text-[#00E5FF] transition-transform duration-500 ${isHistoryVisible ? 'bg-[#00E5FF]/20' : ''}`}>
-                            {Icons.Clipboard}
+                            <Icons.Clipboard />
                         </div>
                         <div className="text-left">
                             <h4 className="text-xs font-black text-white uppercase tracking-[0.25em]">Historial Clínico de Novedades</h4>
@@ -278,7 +278,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate, onClose, o
                                     <div className="flex justify-between items-start gap-4 pb-4">
                                         <div className="flex items-center gap-4">
                                             <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-[#00E5FF] border border-white/5 shadow-inner">
-                                                {Icons.Profile}
+                                                <Icons.Profile />
                                             </div>
                                             <div>
                                                 <p className="text-sm font-bold text-white font-inter tracking-tight leading-none">{note.authorName}</p>
@@ -305,7 +305,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate, onClose, o
             {canManage && (
                 <footer className="flex flex-col sm:flex-row justify-end gap-4 pt-10 border-t border-white/5">
                     <GlassButton onClick={() => onEdit(patient)} className="sm:w-auto h-12 uppercase tracking-widest text-[10px] font-black">
-                        {Icons.Plus} <span className="ml-2">Modificar Información</span>
+                        <Icons.Plus /> <span className="ml-2">Modificar Información</span>
                     </GlassButton>
                     {patient.estado === 'Pendiente' && (
                         <div className="flex gap-4">
@@ -339,8 +339,8 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate, onClose, o
             {notification && (
                 <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[2000] animate-slide-up">
                     <div className={`px-8 py-4 rounded-2xl flex items-center gap-4 border shadow-2xl backdrop-blur-xl ${notification.type === 'success'
-                            ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
-                            : 'bg-red-500/20 border-red-500/30 text-red-400'
+                        ? 'bg-emerald-500/20 border-emerald-500/30 text-emerald-400'
+                        : 'bg-red-500/20 border-red-500/30 text-red-400'
                         }`}>
                         <div className="w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-sm">
                             {notification.type === 'success' ? '✓' : '!'}

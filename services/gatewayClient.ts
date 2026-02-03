@@ -7,6 +7,7 @@ interface GatewayRequest {
     type: string;
     app: string;
     priority: 'CRITICAL' | 'HIGH' | 'NORMAL' | 'LOW';
+    model?: string; // Optional model specification
     data: any;
 }
 

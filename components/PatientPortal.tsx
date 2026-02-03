@@ -43,7 +43,7 @@ const PatientPortal: React.FC = () => {
         return (
             <div className="min-h-screen flex items-center justify-center">
                 <GlassCard className="p-8 max-w-md text-center">
-                    <div className="text-yellow-500 mb-4">{Icons.AlertCircle}</div>
+                    <div className="text-yellow-500 mb-4"><Icons.AlertCircle /></div>
                     <h2 className="text-xl font-bold text-white mb-2">Cuenta No Vinculada</h2>
                     <p className="text-gray-400 text-sm">
                         Su cuenta de paciente no está vinculada a un registro. Por favor contacte al coordinador.
@@ -72,7 +72,7 @@ const PatientPortal: React.FC = () => {
                 <div className="relative z-10">
                     <div className="flex items-center gap-3 mb-4">
                         <div className="p-3 bg-[#00E5FF]/10 rounded-xl">
-                            {Icons.Calendar}
+                            <Icons.Calendar />
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-white">Próxima Visita</h2>
@@ -117,7 +117,7 @@ const PatientPortal: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <GlassCard className="!p-6">
                     <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                        {Icons.User}
+                        <Icons.User />
                         Mis Datos
                     </h3>
                     <div className="space-y-3 text-sm">
@@ -147,7 +147,7 @@ const PatientPortal: React.FC = () => {
 
                 <GlassCard className="!p-6">
                     <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
-                        {Icons.ClipboardCheck}
+                        <Icons.ClipboardCheck />
                         Mi Programa
                     </h3>
                     <div className="space-y-3 text-sm">
@@ -166,8 +166,8 @@ const PatientPortal: React.FC = () => {
                         <div>
                             <p className="text-gray-500">Estado</p>
                             <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold ${myPatientData.estado === 'Aceptado' ? 'bg-green-500/20 text-green-400' :
-                                    myPatientData.estado === 'Pendiente' ? 'bg-yellow-500/20 text-yellow-400' :
-                                        'bg-red-500/20 text-red-400'
+                                myPatientData.estado === 'Pendiente' ? 'bg-yellow-500/20 text-yellow-400' :
+                                    'bg-red-500/20 text-red-400'
                                 }`}>
                                 {myPatientData.estado}
                             </span>

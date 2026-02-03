@@ -135,7 +135,7 @@ const PersonnelPlanner: React.FC = () => {
             <div className="flex justify-between items-center">
                 <h1 className="text-3xl font-bold text-white flex items-center gap-3 font-outfit">
                     <span className="p-2 bg-[#00E5FF]/10 rounded-xl text-[#00E5FF]">
-                        {Icons.ClipboardCheck}
+                        <Icons.ClipboardCheck />
                     </span>
                     Camus: Motor de Inferencia Operativa
                 </h1>
@@ -226,21 +226,21 @@ const PersonnelPlanner: React.FC = () => {
                                     value={inferenceResult.etp_required.medicina}
                                     variant="cyan"
                                     tasks={["Factor K: " + (inferenceResult.scenarios.excellence.k || 1.15)]}
-                                    icon={Icons.User}
+                                    icon={<Icons.User />}
                                 />
                                 <EtpCard
                                     role="Enfermería Jefe"
                                     value={inferenceResult.etp_required.enfermeria_jefe}
                                     variant="purple"
                                     tasks={["Estratificación Automática"]}
-                                    icon={Icons.Clipboard}
+                                    icon={<Icons.Clipboard />}
                                 />
                                 <EtpCard
                                     role="Auxiliares"
                                     value={inferenceResult.etp_required.auxiliares}
                                     variant="green"
                                     tasks={["Productividad Ajustada"]}
-                                    icon={Icons.Users}
+                                    icon={<Icons.Users />}
                                 />
                             </div>
 
@@ -261,7 +261,7 @@ const PersonnelPlanner: React.FC = () => {
                                 </div>
                                 {inferenceResult.risk_alert && (
                                     <div className="mt-4 p-4 rounded-xl bg-red-500/20 border border-red-500/40 text-red-100 text-sm flex items-center gap-3">
-                                        <span className="text-red-400">{Icons.AlertCircle}</span>
+                                        <span className="text-red-400"><Icons.AlertCircle /></span>
                                         {inferenceResult.risk_alert}
                                     </div>
                                 )}
@@ -286,7 +286,7 @@ const PersonnelPlanner: React.FC = () => {
                     ) : (
                         <div className="h-full flex flex-col items-center justify-center text-center p-12 opacity-50 space-y-6">
                             <div className="p-8 rounded-full bg-white/5 border border-white/10 animate-pulse">
-                                <span className="text-gray-500">{Icons.ClipboardCheck}</span>
+                                <span className="text-gray-500"><Icons.ClipboardCheck /></span>
                             </div>
                             <div>
                                 <h3 className="text-xl font-bold text-white mb-2">Motor de Inferencia Camus en Espera</h3>
@@ -315,7 +315,7 @@ const TimeInput = ({ label, value, onChange }: { label: string, value: number, o
     </div>
 );
 
-const EtpCard = ({ role, value, variant, icon, tasks }: { role: string, value: number, variant: 'cyan' | 'purple' | 'green', icon: any, tasks: string[] }) => (
+const EtpCard = ({ role, value, variant, icon, tasks }: { role: string, value: number, variant: 'cyan' | 'purple' | 'green', icon: React.ReactNode, tasks: string[] }) => (
     <div className={`p-6 rounded-2xl bg-white/5 border border-white/10 relative overflow-hidden group hover:bg-white/[0.08] transition-all hover:translate-y-[-4px] etp-${variant}`}>
         <div className="etp-card-accent"></div>
         <div className="flex items-center gap-4 mb-4">

@@ -109,7 +109,7 @@ const ScheduleView: React.FC = () => {
         <div className="flex flex-col space-y-8 animate-fade-in max-w-6xl mx-auto px-4">
             <div className="space-y-2">
                 <h1 className="text-3xl font-bold text-white font-outfit flex items-center gap-3">
-                    <span className="p-2 bg-[#00E5FF]/10 rounded-lg text-[#00E5FF]">{Icons.Calendar}</span>
+                    <span className="p-2 bg-[#00E5FF]/10 rounded-lg text-[#00E5FF]"><Icons.Calendar /></span>
                     Agenda de Visitas
                 </h1>
                 <p className="text-gray-400 max-w-2xl leading-relaxed">
@@ -131,13 +131,13 @@ const ScheduleView: React.FC = () => {
 
                             <div className="flex justify-between items-start mb-4">
                                 <span className={`px-2 py-1 rounded-md text-[10px] font-bold uppercase tracking-widest ${appt.priority === 'high' ? 'bg-purple-500/20 text-purple-400' :
-                                        appt.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                                            'bg-[#00E5FF]/20 text-[#00E5FF]'
+                                    appt.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
+                                        'bg-[#00E5FF]/20 text-[#00E5FF]'
                                     }`}>
                                     Prioridad {appt.priority}
                                 </span>
                                 {isHigh && (
-                                    <span className="text-purple-400 animate-pulse">{Icons.AlertCircle}</span>
+                                    <span className="text-purple-400 animate-pulse"><Icons.AlertCircle /></span>
                                 )}
                             </div>
 
@@ -160,7 +160,7 @@ const ScheduleView: React.FC = () => {
                                     <p className="text-xl font-bold text-white font-outfit">{appt.dueDate}</p>
                                 </div>
                                 <div className="p-2 rounded-lg bg-white/5 text-gray-400 group-hover:text-[#00E5FF] group-hover:bg-[#00E5FF]/10 transition-all cursor-pointer">
-                                    {Icons.ClipboardCheck}
+                                    <Icons.ClipboardCheck />
                                 </div>
                             </div>
                         </GlassCard>

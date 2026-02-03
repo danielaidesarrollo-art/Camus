@@ -260,7 +260,7 @@ const MapView: React.FC = () => {
             <div className="flex flex-col space-y-4">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                     <h1 className="text-3xl font-bold text-white flex items-center gap-3 font-outfit">
-                        <span className="p-2 bg-[#00E5FF]/10 rounded-lg text-[#00E5FF]">{Icons.Map}</span>
+                        <span className="p-2 bg-[#00E5FF]/10 rounded-lg text-[#00E5FF]"><Icons.Map /></span>
                         Mapa de Pacientes
                     </h1>
                     <div className="flex gap-2 w-full md:w-auto">

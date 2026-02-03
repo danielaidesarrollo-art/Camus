@@ -296,7 +296,9 @@ const RoutePlanner: React.FC = () => {
         <div className="flex flex-col h-full space-y-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h1 className="text-3xl font-bold text-white font-outfit flex items-center gap-3">
-                    <span className="p-2 bg-[#00E5FF]/10 rounded-lg text-[#00E5FF]">{Icons.Routes}</span>
+                    <div className="p-3 bg-[#00E5FF]/10 rounded-lg text-[#00E5FF]">
+                        <Icons.Route size={24} />
+                    </div>
                     Rutas Inteligentes
                 </h1>
                 <div className="flex flex-wrap gap-2 w-full md:w-auto">

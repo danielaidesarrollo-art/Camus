@@ -46,10 +46,18 @@ const AppContent: React.FC = () => {
     }
 
     return (
-        <>
+        <div className="relative">
+            {/* <HUDOverlay
+                title="CAMUS HOME CARE HUD"
+                metrics={[
+                    { label: 'Pacientes', value: '12', unit: 'ACTIVOS' },
+                    { label: 'Ruta', value: '75', unit: '%' },
+                    { label: 'Alertas', value: '2', unit: 'CRIT' }
+                ]}
+            /> */}
             {!user ? <Login /> : <Dashboard />}
             <InstallPrompt />
-        </>
+        </div>
     );
 };
 

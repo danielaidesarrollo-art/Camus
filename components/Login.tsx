@@ -97,7 +97,7 @@ const Login: React.FC = () => {
 
                         {error && (
                             <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-bold uppercase tracking-wider animate-shake">
-                                {Icons.AlertCircle && <span className="inline-block mr-2 align-middle">⚠️</span>}
+                                <Icons.AlertCircle className="inline-block mr-2 align-middle" />
                                 {error}
                             </div>
                         )}

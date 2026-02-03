@@ -10,7 +10,7 @@ if (!rootElement) {
     throw new Error("Could not find root element to mount to");
 }
 
-const ErrorFallback = ({ error }: { error: Error | null }) => {
+const ErrorFallback = ({ error }: { error?: Error | null }) => {
     return (
         <div className="min-h-screen flex items-center justify-center bg-brand-gray p-4">
             <div className="w-full max-w-lg p-8 space-y-6 bg-white rounded-xl shadow-lg text-center">

@@ -126,7 +126,7 @@ const StaffManagement: React.FC = () => {
                                     {isEditing ? 'Actualizar Datos' : 'Registrar Colaborador'}
                                 </GlassButton>
                                 {isEditing && (
-                                    <GlassButton type="button" variant="secondary" onClick={resetForm} className="w-full">
+                                    <GlassButton type="button" variant="outline" onClick={resetForm} className="w-full">
                                         Cancelar Edición
                                     </GlassButton>
                                 )}

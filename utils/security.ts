@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 /**
  * Security Utility
  * Implements AES-256-GCM encryption for health data transit (Directiva 4)

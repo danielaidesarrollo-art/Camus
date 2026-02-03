@@ -380,7 +380,7 @@ const PatientIntakeForm: React.FC<PatientIntakeFormProps> = ({ onSubmit, patient
                                     {errors.miligramos && <p className="text-red-400 text-[9px] mt-2 font-black uppercase tracking-widest">{errors.miligramos}</p>}
                                 </div>
                                 <div>
-                                    <GlassInput label="Frecuencia (Horas)" type="number" value={antibiotico.frecuenciaHours || ''} onChange={e => setAntibiotico(p => ({ ...p, frecuenciaHoras: parseInt(e.target.value) }))} required />
+                                    <GlassInput label="Frecuencia (Horas)" type="number" value={antibiotico.frecuenciaHoras || ''} onChange={e => setAntibiotico(p => ({ ...p, frecuenciaHoras: parseInt(e.target.value) }))} required />
                                     {errors.frecuenciaHoras && <p className="text-red-400 text-[9px] mt-2 font-black uppercase tracking-widest">{errors.frecuenciaHoras}</p>}
                                 </div>
                             </div>

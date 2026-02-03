@@ -156,6 +156,7 @@ const ProductionOrderView: React.FC = () => {
                                     <GlassCheckbox
                                         checked={antibioticPatients.length > 0 && selectedRows.size === antibioticPatients.length}
                                         onChange={toggleAll}
+                                        label=""
                                     />
                                 </th>
                                 <th className="px-3 py-4">Fecha/Mes</th>
@@ -194,6 +195,7 @@ const ProductionOrderView: React.FC = () => {
                                                 <GlassCheckbox
                                                     checked={isSelected}
                                                     onChange={() => toggleRow(p.id)}
+                                                    label=""
                                                 />
                                             </td>
                                             <td className="px-3 py-4 whitespace-nowrap text-gray-500">
@@ -315,7 +317,6 @@ const ProductionOrderView: React.FC = () => {
 
                 <GlassButton
                     variant="primary"
-                    size="lg"
                     onClick={handleSendOrder}
                     disabled={selectedRows.size === 0}
                     className="min-w-[240px] !py-4 shadow-2xl shadow-[#00E5FF]/20"

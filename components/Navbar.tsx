@@ -59,27 +59,27 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, activeView }) => {
                     <div className="flex items-center gap-1 md:gap-2">
                         {userIsPatient ? (
                             <>
-                                <NavItem icon={Icons.Home} label={t('patient_portal')} isActive={activeView === 'patient_portal'} onClick={() => onNavigate('patient_portal')} />
-                                <NavItem icon={Icons.Profile} label={t('profile')} isActive={activeView === 'profile'} onClick={() => onNavigate('profile')} />
+                                <NavItem icon={<Icons.Home />} label={t('patient_portal')} isActive={activeView === 'patient_portal'} onClick={() => onNavigate('patient_portal')} />
+                                <NavItem icon={<Icons.Profile />} label={t('profile')} isActive={activeView === 'profile'} onClick={() => onNavigate('profile')} />
                             </>
                         ) : (
                             <>
                                 {canAccessView(user, View.DASHBOARD) && (
-                                    <NavItem icon={Icons.Home} label={t('patient_list')} isActive={activeView === 'dashboard'} onClick={() => onNavigate('dashboard')} />
+                                    <NavItem icon={<Icons.Home />} label={t('patient_list')} isActive={activeView === 'dashboard'} onClick={() => onNavigate('dashboard')} />
                                 )}
                                 {canAccessView(user, View.MAP) && (
-                                    <NavItem icon={Icons.Map} label={t('map')} isActive={activeView === 'map'} onClick={() => onNavigate('map')} />
+                                    <NavItem icon={<Icons.Map />} label={t('map')} isActive={activeView === 'map'} onClick={() => onNavigate('map')} />
                                 )}
                                 {canAccessView(user, View.ROUTES) && (
-                                    <NavItem icon={Icons.Route} label={t('routes')} isActive={activeView === 'routes'} onClick={() => onNavigate('routes')} />
+                                    <NavItem icon={<Icons.Route />} label={t('routes')} isActive={activeView === 'routes'} onClick={() => onNavigate('routes')} />
                                 )}
                                 {isChiefOrCoord && canAccessView(user, View.PRODUCTION) && (
-                                    <NavItem icon={Icons.ClipboardCheck} label={t('production')} isActive={activeView === 'production'} onClick={() => onNavigate('production')} />
+                                    <NavItem icon={<Icons.ClipboardCheck />} label={t('production')} isActive={activeView === 'production'} onClick={() => onNavigate('production')} />
                                 )}
                                 {isChiefOrCoord && canAccessView(user, View.PERSONNEL) && (
-                                    <NavItem icon={Icons.Users} label={t('staff')} isActive={activeView === 'personnel'} onClick={() => onNavigate('personnel')} />
+                                    <NavItem icon={<Icons.Users />} label={t('staff')} isActive={activeView === 'personnel'} onClick={() => onNavigate('personnel')} />
                                 )}
-                                <NavItem icon={Icons.Profile} label={t('profile')} isActive={activeView === 'profile'} onClick={() => onNavigate('profile')} />
+                                <NavItem icon={<Icons.Profile />} label={t('profile')} isActive={activeView === 'profile'} onClick={() => onNavigate('profile')} />
                             </>
                         )}
                     </div>
@@ -105,7 +105,7 @@ const Navbar: React.FC<NavbarProps> = ({ onNavigate, activeView }) => {
                             title="Cerrar Sesión"
                         >
                             <span className="group-hover:drop-shadow-[0_0_8px_rgba(248,113,113,0.4)] transition-all">
-                                {Icons.Logout}
+                                <Icons.Logout />
                             </span>
                         </button>
                     </div>
